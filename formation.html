@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Formation JavaScript · Black</title>
+<style>
+:root{
+  --bg:#0f1115; --panel:#161a21; --panel2:#1b212a; --bord:#272e3a;
+  --txt:#d8dee9; --muet:#8b95a7; --accent:#5aa9ff; --ok:#3fbf7f;
+  --err:#ff6b6b; --warn:#f0b429; --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--txt);
+  font:15px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+.app{display:flex;height:100vh}
+
+/* ---------- barre latérale ---------- */
+#lat{width:290px;flex:0 0 290px;background:var(--panel);border-right:1px solid var(--bord);
+  display:flex;flex-direction:column}
+.marque{padding:16px 18px 12px;border-bottom:1px solid var(--bord)}
+.marque h1{margin:0;font-size:15px;font-weight:600;letter-spacing:.2px}
+.marque p{margin:3px 0 0;font-size:12px;color:var(--muet)}
+.jauge{margin-top:11px;height:5px;background:var(--panel2);border-radius:3px;overflow:hidden}
+.jauge i{display:block;height:100%;background:var(--ok);width:0;transition:width .35s}
+.jauge-txt{margin-top:6px;font-size:11px;color:var(--muet);display:flex;justify-content:space-between}
+#liste{flex:1;overflow-y:auto;padding:10px 0 24px}
+.sec{padding:16px 18px 5px;font-size:11px;font-weight:600;letter-spacing:.9px;
+  text-transform:uppercase;color:var(--muet)}
+.mod{display:flex;align-items:center;gap:9px;padding:7px 18px;font-size:13.5px;
+  cursor:pointer;border-left:2px solid transparent}
+.mod:hover{background:var(--panel2)}
+.mod.actif{background:var(--panel2);border-left-color:var(--accent);color:#fff}
+.mod.bloque{opacity:.34;cursor:not-allowed}
+.mod .pastille{width:15px;flex:0 0 15px;text-align:center;font-size:11px;color:var(--muet)}
+.mod.fait .pastille{color:var(--ok)}
+.mod.encours .pastille{color:var(--warn)}
+.mod .code{font-family:var(--mono);font-size:11px;color:var(--muet);flex:0 0 38px}
+.mod .nom{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pied{padding:10px 18px;border-top:1px solid var(--bord);display:flex;flex-direction:column;gap:7px}
+.mini{font-size:11.5px;color:var(--muet);text-align:left;padding:4px 0}
+.mini:hover{color:var(--accent)}
+#etat-sync{font-size:11px;color:var(--muet)}
+#etat-sync b{color:var(--ok);font-weight:600}
+
+/* ---------- zone principale ---------- */
+#princ{flex:1;display:flex;flex-direction:column;min-width:0}
+.entete{padding:14px 24px 0;border-bottom:1px solid var(--bord);background:var(--panel)}
+.entete .ligne{display:flex;align-items:baseline;gap:12px}
+.entete h2{margin:0;font-size:19px;font-weight:600}
+.entete .meta{font-size:12px;color:var(--muet)}
+.badge{font-size:11px;padding:2px 8px;border-radius:99px;border:1px solid var(--bord);color:var(--muet)}
+.badge.ok{color:var(--ok);border-color:#245c41;background:#122a1f}
+.onglets{display:flex;gap:2px;margin-top:12px}
+.onglet{padding:8px 15px;font-size:13.5px;color:var(--muet);border-bottom:2px solid transparent}
+.onglet:hover{color:var(--txt)}
+.onglet.actif{color:#fff;border-bottom-color:var(--accent)}
+#vue{flex:1;overflow:hidden;display:flex;min-height:0}
+
+/* ---------- texte / markdown ---------- */
+.doc{padding:26px 34px 80px;overflow-y:auto;flex:1;max-width:860px}
+.doc h1{font-size:22px;margin:.2em 0 .6em;font-weight:600}
+.doc h2{font-size:16px;margin:1.9em 0 .5em;font-weight:600;color:#fff;
+  border-bottom:1px solid var(--bord);padding-bottom:6px}
+.doc h3{font-size:14px;margin:1.5em 0 .4em;font-weight:600;color:#c9d3e3}
+.doc p{margin:.75em 0}
+.doc ul,.doc ol{margin:.7em 0;padding-left:22px}
+.doc li{margin:.28em 0}
+.doc blockquote{margin:1em 0;padding:.5em 14px;border-left:3px solid var(--accent);
+  background:var(--panel2);color:var(--muet)}
+.doc hr{border:none;border-top:1px solid var(--bord);margin:1.8em 0}
+.doc table{border-collapse:collapse;margin:1em 0;font-size:13.5px;width:100%}
+.doc th,.doc td{border:1px solid var(--bord);padding:6px 11px;text-align:left}
+.doc th{background:var(--panel2);font-weight:600}
+.doc a{color:var(--accent)}
+code{font-family:var(--mono);font-size:.9em}
+.doc :not(pre)>code{background:var(--panel2);border:1px solid var(--bord);
+  padding:1px 5px;border-radius:4px;color:#e6c07b}
+pre{background:#0c0e13;border:1px solid var(--bord);border-radius:7px;
+  padding:13px 15px;overflow-x:auto;margin:1em 0;line-height:1.55}
+pre code{font-size:13px}
+/* coloration */
+.j-com{color:#5c6773;font-style:italic}
+.j-str{color:#9ece6a}
+.j-num{color:#ff9e64}
+.j-kw{color:#bb9af7}
+.j-fn{color:#7aa2f7}
+.j-pon{color:#7f8798}
+
+/* ---------- exercice ---------- */
+.split{display:flex;flex:1;min-height:0;min-width:0}
+.gauche{flex:0 0 40%;border-right:1px solid var(--bord);overflow-y:auto;min-width:0}
+.gauche .doc{padding:22px 26px 60px;max-width:none}
+.droite{flex:1;display:flex;flex-direction:column;min-width:0}
+.barre{display:flex;align-items:center;gap:10px;padding:8px 14px;
+  border-bottom:1px solid var(--bord);background:var(--panel)}
+.barre .fic{font-family:var(--mono);font-size:11.5px;color:var(--muet);flex:1;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btn{padding:6px 14px;border-radius:6px;font-size:13px;font-weight:500;
+  background:var(--accent);color:#06121f;white-space:nowrap}
+.btn:hover{filter:brightness(1.12)}
+.btn.sec{background:var(--panel2);color:var(--txt);border:1px solid var(--bord)}
+.btn.sec:hover{background:#232a35;filter:none}
+.btn:disabled{opacity:.45;cursor:not-allowed;filter:none}
+.btn.ok{background:var(--ok);color:#052015}
+
+/* éditeur */
+.ed{position:relative;flex:1;min-height:120px;overflow:auto;background:#0c0e13}
+.ed .cadre{position:relative;min-height:100%;display:flex}
+.gout{flex:0 0 46px;padding:12px 8px 12px 0;text-align:right;color:#3f4757;
+  font-family:var(--mono);font-size:13px;line-height:1.6;user-select:none;
+  background:#0a0c10;border-right:1px solid #171b23}
+.zone{position:relative;flex:1;min-width:0}
+.zone pre,.zone textarea{margin:0;padding:12px 14px;font-family:var(--mono);font-size:13px;
+  line-height:1.6;white-space:pre;word-wrap:normal;tab-size:2;border:0;background:transparent}
+.zone pre{position:absolute;inset:0;overflow:hidden;pointer-events:none;border-radius:0}
+.zone textarea{position:relative;width:100%;height:100%;min-height:100%;color:transparent;
+  caret-color:#fff;resize:none;outline:none;display:block;overflow:hidden}
+.zone textarea::selection{background:#2a4a7f;color:transparent}
+
+/* résultats */
+.res{flex:0 0 auto;max-height:46%;overflow-y:auto;border-top:1px solid var(--bord);
+  background:var(--panel);padding:0 0 10px}
+.res-bar{position:sticky;top:0;display:flex;align-items:center;gap:12px;padding:9px 15px;
+  background:var(--panel);border-bottom:1px solid var(--bord);font-size:13px;z-index:2}
+.res-bar .pt{font-weight:600}
+.res-bar .pt.ok{color:var(--ok)} .res-bar .pt.ko{color:var(--err)}
+.res-grp{padding:10px 16px 2px;font-size:11px;font-weight:600;letter-spacing:.7px;
+  text-transform:uppercase;color:var(--muet)}
+.res-cas{display:flex;gap:9px;padding:3px 16px;font-size:13px;align-items:flex-start}
+.res-cas .ic{flex:0 0 14px;font-size:11px;line-height:1.6}
+.res-cas.v .ic{color:var(--ok)} .res-cas.x .ic{color:var(--err)}
+.res-cas.x{color:#ffd7d7}
+.detail{margin:5px 0 9px 39px;padding:9px 12px;background:#1d1417;border:1px solid #4a2530;
+  border-radius:6px;font-size:12.5px;font-family:var(--mono);white-space:pre-wrap;
+  line-height:1.55;color:#ffb3b3}
+.detail .lbl{color:var(--muet)}
+.detail .att{color:var(--ok)} .detail .obt{color:var(--err)}
+.sortie{margin:0;padding:11px 16px;border-top:1px solid var(--bord);
+  font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;color:#9aa5b8;line-height:1.6}
+.sortie .t{color:var(--muet);font-family:system-ui;font-size:11px;
+  text-transform:uppercase;letter-spacing:.7px;display:block;margin-bottom:5px}
+.vide{padding:40px 30px;color:var(--muet);text-align:center;font-size:13.5px}
+.reussite{margin:14px 16px;padding:14px 16px;background:#102a1e;border:1px solid #245c41;
+  border-radius:8px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.reussite b{color:var(--ok)}
+.reussite p{margin:0;flex:1;min-width:200px;font-size:13.5px}
+.alerte{margin:14px 16px;padding:12px 15px;background:#2a1f10;border:1px solid #5c4724;
+  border-radius:8px;font-size:13px;color:#f5d9a8}
+
+/* accueil / modale */
+.accueil{padding:46px 40px;overflow-y:auto;flex:1}
+.accueil h2{font-size:24px;margin:0 0 8px}
+.accueil .sous{color:var(--muet);margin:0 0 28px}
+.cartes{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:14px;max-width:920px}
+.carte{background:var(--panel);border:1px solid var(--bord);border-radius:9px;padding:16px 18px}
+.carte h3{margin:0 0 6px;font-size:13.5px}
+.carte p{margin:0;font-size:12.5px;color:var(--muet);line-height:1.6}
+.carte .gros{font-size:26px;font-weight:600;color:var(--accent);line-height:1.2}
+.fond{position:fixed;inset:0;background:#000a;display:none;align-items:center;
+  justify-content:center;z-index:50;padding:24px}
+.fond.on{display:flex}
+.modale{background:var(--panel);border:1px solid var(--bord);border-radius:11px;
+  max-width:620px;width:100%;max-height:82vh;overflow-y:auto;padding:24px 28px}
+.modale h3{margin:0 0 14px;font-size:17px}
+.modale .doc{padding:0;max-width:none;overflow:visible}
+.modale .fin{margin-top:20px;display:flex;justify-content:flex-end;gap:9px}
+kbd{font-family:var(--mono);font-size:11px;background:var(--panel2);border:1px solid var(--bord);
+  border-bottom-width:2px;border-radius:4px;padding:1px 5px;color:var(--txt)}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:#2b323d;border-radius:5px}
+::-webkit-scrollbar-thumb:hover{background:#39424f}
+::-webkit-scrollbar-track{background:transparent}
+@media(max-width:1100px){.gauche{flex:0 0 34%}}
+@media(max-width:900px){#lat{width:225px;flex:0 0 225px}.split{flex-direction:column}
+  .gauche{flex:0 0 40%;border-right:0;border-bottom:1px solid var(--bord)}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside id="lat">
+    <div class="marque">
+      <h1>Formation JavaScript</h1>
+      <p>Black · objectif dev front junior React</p>
+      <div class="jauge"><i id="jauge"></i></div>
+      <div class="jauge-txt"><span id="jauge-txt">0 / 13</span><span id="jauge-pc">0 %</span></div>
+    </div>
+    <div id="liste"></div>
+    <div class="pied">
+      <div id="etat-sync">Progression enregistrée dans ce navigateur</div>
+      <button class="mini" id="b-connecter">📁 Connecter le dossier Javascript…</button>
+      <button class="mini" id="b-aide">❔ Comment ça marche</button>
+      <button class="mini" id="b-export">⬇ Exporter progression.json</button>
+    </div>
+  </aside>
+  <main id="princ">
+    <div class="entete" id="entete"></div>
+    <div id="vue"></div>
+  </main>
+</div>
+
+<div class="fond" id="fond"><div class="modale" id="modale"></div></div>
+
+<script id="donnees" type="application/json">{"sections":[{"num":"01","titre":"Mise en route","intro":"Installer, exécuter, lire une erreur. Avant d'apprendre le langage, on apprend à s'en servir.","modules":[{"code":"01-01","titre":"Installer l'environnement","min":30,"pret":true,"lecon":"\n# 01-01 · Installer l'environnement\n\n**30 min · aucun prérequis**\n\nAvant d'écrire du JavaScript, il faut trois choses : un moteur pour l'exécuter, un éditeur pour l'écrire, un navigateur pour le voir tourner.\n\n## 1. Node.js\n\nJavaScript est né dans le navigateur. Node.js est le programme qui lui permet de tourner aussi **en dehors** du navigateur, directement sur ta machine. C'est lui qui fera fonctionner toute cette formation.\n\n- Va sur **nodejs.org**\n- Télécharge la version **LTS** (Long Term Support). Pas la « Current » : la LTS est celle utilisée en entreprise.\n- Installe en laissant toutes les options par défaut.\n- **Ferme et rouvre ton terminal** après l'installation (sinon il ne connaît pas encore la commande).\n\nVérifie :\n\n```\nnode -v\nnpm -v\n```\n\nTu dois voir deux numéros de version, par exemple `v22.11.0` et `10.9.0`. Si le terminal répond « commande introuvable », l'installation ne s'est pas terminée ou le terminal n'a pas été rouvert.\n\n## 2. VS Code\n\nL'éditeur standard du métier, gratuit. Sur **code.visualstudio.com**.\n\nUne fois installé, ouvre le panneau Extensions (`Ctrl+Maj+X`) et installe :\n\n| Extension | À quoi ça sert |\n|---|---|\n| **Prettier** | Reformate ton code proprement à chaque sauvegarde. Tu arrêtes de penser à l'indentation. |\n| **ESLint** | Souligne les erreurs et les mauvaises habitudes pendant que tu écris. |\n| **Error Lens** | Affiche le message d'erreur directement sur la ligne concernée. |\n\nActive le formatage automatique : `Ctrl+Maj+P` → tape « Format On Save » → coche l'option.\n\n## 3. Le terminal intégré\n\nDans VS Code : `Ctrl+ù` (ou menu Terminal → Nouveau terminal). C'est là que tu taperas toutes les commandes de la formation. Tu ne quitteras plus l'éditeur.\n\n## 4. Un navigateur avec de bons outils\n\nChrome, Edge ou Firefox. `F12` ouvre les **DevTools**. Onglet **Console** : tu peux y taper du JavaScript directement. Essaie `2 + 2` puis Entrée.\n\n## À retenir\n\n- **Node** exécute ton JS hors navigateur, **le navigateur** exécute celui des pages web. Même langage, deux environnements.\n- `node -v` est le premier réflexe quand quelque chose ne marche pas.\n- Un terminal doit être rouvert après l'installation d'un outil pour le connaître.\n\n## Checklist\n\nCoche mentalement, puis valide :\n\n- [ ] `node -v` affiche une version ≥ 18\n- [ ] `npm -v` affiche une version\n- [ ] VS Code est installé, avec Prettier et ESLint\n- [ ] Le format-on-save est actif\n- [ ] Je sais ouvrir le terminal intégré de VS Code\n- [ ] Je sais ouvrir la console du navigateur avec F12\n\nQuand tout est coché :\n\n```\njs 01-01 --fait\n```\n"},{"code":"01-02","titre":"Console et premier script","min":15,"pret":true,"lecon":"\n# 01-02 · Console et premier script\n\n**15 min · après 01-01**\n\n## Trois façons d'exécuter du JavaScript\n\n**1. La console du navigateur** (`F12` → Console). Pour tester une idée en deux secondes. Rien n'est sauvegardé.\n\n**2. Un fichier lancé par Node.** C'est ce que tu feras dans toute la formation.\n\n```js\n// bonjour.mjs\nconsole.log(\"Bonjour !\");\n```\n\n```\nnode bonjour.mjs\n```\n\n**3. Un fichier chargé par une page HTML.** À partir de la section 06 (le DOM).\n\n```html\n<script src=\"script.js\"><\/script>\n```\n\n## console.log\n\nC'est ta fenêtre sur ce que fait ton code. Elle accepte plusieurs arguments :\n\n```js\nconsole.log(\"Résultat :\", 42, true);   // Résultat : 42 true\n```\n\nVariantes utiles : `console.error()` (en rouge), `console.warn()`, `console.table()` (magnifique sur un tableau d'objets).\n\n## L'extension .mjs\n\nTu verras `.mjs` partout dans cette formation. C'est du JavaScript « moderne » : il autorise `import` et `export`, que tu utiliseras dès le premier exercice. Un fichier `.js` classique ne les accepte pas sans configuration.\n\n## export : partager du code entre fichiers\n\nUn fichier JavaScript garde tout pour lui par défaut. Pour qu'un autre fichier puisse utiliser ta fonction, tu dois l'**exporter** :\n\n```js\n// maths.mjs\nexport function doubler(n) {\n  return n * 2;\n}\n```\n\n```js\n// autre.mjs\nimport { doubler } from \"./maths.mjs\";\nconsole.log(doubler(21));   // 42\n```\n\nC'est exactement le mécanisme utilisé par les tests de la formation : ils importent les fonctions que tu exportes et vérifient ce qu'elles renvoient.\n\n## return n'est pas console.log\n\nErreur numéro un des débuts. `console.log` **affiche**. `return` **renvoie une valeur** utilisable par le reste du programme.\n\n```js\nfunction mauvais(n) { console.log(n * 2); }   // affiche, renvoie undefined\nfunction bon(n)     { return n * 2; }         // renvoie une valeur\n```\n\nLes tests vérifient ce que tu **renvoies**. Une fonction qui se contente d'afficher échouera toujours.\n\n## À retenir\n\n- `node fichier.mjs` exécute un fichier.\n- `console.log` sert à observer, pas à produire un résultat.\n- `export` rend une fonction visible de l'extérieur ; `import` la récupère.\n- Les tests lisent tes `return`.\n","dossier":"01-02-console-et-premier-script","enonce":"\n# Exercice 01-02\n\nOuvre `exercice.mjs` et complète les deux fonctions.\n\n## 1. `presentation(prenom, langage)`\n\nRenvoie une phrase exactement au format :\n\n```\nJe suis Black et j'apprends JavaScript.\n```\n\n## 2. `doubler(n)`\n\nRenvoie le double du nombre reçu.\n\n## Attention\n\nCes deux fonctions doivent **renvoyer** (`return`) une valeur, pas l'afficher.\n\n## Corriger\n\n```\njs 01-02\n```\n","depart":"\n// Exercice 01-02 · Console et premier script\n// Complète les fonctions, garde les `export`.\n\nexport function presentation(prenom, langage) {\n  // TODO : renvoie \"Je suis <prenom> et j'apprends <langage>.\"\n}\n\nexport function doubler(n) {\n  // TODO : renvoie le double de n\n}\n\n// Pour tester à la main :  node exercice.mjs\nconsole.log(presentation(\"Black\", \"JavaScript\"));\nconsole.log(doubler(21));\n","tests":"\nimport { test, groupe, verifier } from \"../../moteur/verif.mjs\";\nimport * as ex from \"./exercice.mjs\";\n\ngroupe(\"presentation\", () => {\n  test(\"est bien exportée comme fonction\", () => {\n    verifier(ex.presentation).estUneFonction();\n  });\n  test(\"renvoie la phrase exacte\", () => {\n    verifier(ex.presentation(\"Black\", \"JavaScript\"))\n      .vaut(\"Je suis Black et j'apprends JavaScript.\");\n  });\n  test(\"s'adapte aux arguments reçus\", () => {\n    verifier(ex.presentation(\"Ada\", \"Python\"))\n      .vaut(\"Je suis Ada et j'apprends Python.\");\n  });\n  test(\"renvoie et n'affiche pas seulement\", () => {\n    const r = ex.presentation(\"X\", \"Y\");\n    if (r === undefined) throw new Error(\"undefined : as-tu utilisé return, ou seulement console.log ?\");\n  });\n});\n\ngroupe(\"doubler\", () => {\n  test(\"double un entier\", () => {\n    verifier(ex.doubler(21)).vaut(42);\n  });\n  test(\"gère zéro et les négatifs\", () => {\n    verifier(ex.doubler(0)).vaut(0);\n    verifier(ex.doubler(-7)).vaut(-14);\n  });\n  test(\"renvoie un nombre, pas une chaîne\", () => {\n    verifier(ex.doubler(5)).estDuType(\"number\", \"5 doublé doit valoir 10 le nombre, pas \\\"10\\\" le texte\");\n  });\n});\n","solution":"export function presentation(prenom, langage) {\n  return `Je suis ${prenom} et j'apprends ${langage}.`;\n}\n\nexport function doubler(n) {\n  return n * 2;\n}"},{"code":"01-03","titre":"Git : le minimum vital","min":60,"pret":true,"lecon":"\n# 01-03 · Git : le minimum vital\n\n**60 min · après 01-01**\n\nGit enregistre l'histoire de ton code. GitHub la met en ligne. Pour un futur dev front, un GitHub actif vaut plus qu'un CV : c'est la preuve que tu codes vraiment.\n\nTu as déjà un GitHub avec des projets. Ce module sert à ancrer le réflexe : **une session de travail = un commit**.\n\n## Installer et se présenter\n\nTélécharge Git sur **git-scm.com**, puis une seule fois :\n\n```\ngit config --global user.name \"Ton Nom\"\ngit config --global user.email \"ton@email.com\"\n```\n\n## Le cycle de base\n\nGit fonctionne en trois zones : ton dossier de travail, la zone de préparation (*staging*), l'historique.\n\n```\ngit status              # que s'est-il passé depuis le dernier commit ?\ngit add .               # je prépare tous mes changements\ngit commit -m \"message\" # je fige un point dans l'histoire\ngit push                # j'envoie sur GitHub\n```\n\n`git status` est la commande que tu taperas le plus souvent. En cas de doute : `git status`.\n\n## Créer un dépôt et le relier\n\n```\ngit init\ngit add .\ngit commit -m \"premier commit\"\ngit branch -M main\ngit remote add origin https://github.com/TON-PSEUDO/formation-js.git\ngit push -u origin main\n```\n\nAprès ce premier `push -u`, un simple `git push` suffira.\n\n## Écrire un message de commit correct\n\nUn message décrit **ce que fait** le changement, à l'impératif, en une ligne courte.\n\n```\n✔ ajoute la fonction doubler et ses tests\n✔ corrige le calcul de TVA sur les prix négatifs\n✘ modifs\n✘ ça marche enfin ptn\n```\n\nTon historique se lit. Des recruteurs le liront.\n\n## .gitignore\n\nCertains fichiers ne doivent jamais partir sur GitHub. Crée un fichier `.gitignore` :\n\n```\nnode_modules/\n.env\n*.log\n```\n\n`node_modules` peut peser des centaines de mégaoctets et se reconstruit avec `npm install`. Il n'a rien à faire dans un dépôt.\n\n## Quand quelque chose va mal\n\n```\ngit log --oneline           # l'historique, une ligne par commit\ngit diff                    # ce que j'ai changé et pas encore préparé\ngit restore fichier.mjs     # j'abandonne mes changements sur ce fichier\n```\n\n## À retenir\n\n- `status` → `add` → `commit` → `push`. Ce cycle, tu le feras des milliers de fois.\n- Un commit par unité de sens, pas un par journée.\n- Un message de commit est une phrase à l'impératif, pas un soupir.\n- `node_modules` ne se commite jamais.\n\n## Checklist\n\n- [ ] `git --version` répond\n- [ ] `user.name` et `user.email` sont configurés\n- [ ] Le dossier de la formation est un dépôt Git avec au moins 3 commits distincts\n- [ ] Il est poussé sur GitHub\n- [ ] Un `.gitignore` existe\n- [ ] Je sais lire `git status` et `git log --oneline`\n\n```\njs 01-03 --fait\n```\n"},{"code":"01-04","titre":"Lire une erreur","min":15,"pret":true,"lecon":"\n# 01-04 · Lire une erreur\n\n**15 min · après 01-02**\n\nUn débutant voit une erreur et panique. Un dev la lit. C'est toute la différence, et elle s'apprend en un quart d'heure.\n\n## Anatomie d'un message\n\n```\nC:\\Javascript\\test.mjs:4\nconsole.log(prix * quantite);\n                    ^\n\nReferenceError: quantite is not defined\n    at file:///C:/Javascript/test.mjs:4:21\n```\n\nQuatre informations, toujours les mêmes :\n\n1. **Le fichier et la ligne** — `test.mjs:4`. Va voir cette ligne.\n2. **Le code fautif**, avec un `^` sous le point exact.\n3. **Le type** — `ReferenceError`.\n4. **La stack trace** — la chaîne des appels qui a mené là. Lis-la de haut en bas ; la première ligne qui parle de *ton* fichier est celle qui compte.\n\n## Les trois types que tu verras 90 % du temps\n\n### SyntaxError\n\nTon code n'est pas du JavaScript valide. Il ne s'exécute même pas. Presque toujours une parenthèse, une accolade ou un guillemet manquant.\n\n```js\nconsole.log(\"bonjour\"   // SyntaxError: missing ) after argument list\n```\n\n### ReferenceError\n\nTu utilises un nom qui n'existe pas. Faute de frappe, variable jamais déclarée, ou déclarée après usage.\n\n```js\nconsole.log(pirx);      // ReferenceError: pirx is not defined\n```\n\n### TypeError\n\nLa valeur existe mais tu lui demandes l'impossible : appeler ce qui n'est pas une fonction, lire une propriété de `undefined` ou `null`.\n\n```js\nconst utilisateur = undefined;\nconsole.log(utilisateur.nom);   // TypeError: Cannot read properties of undefined (reading 'nom')\n```\n\nCe dernier message est le plus fréquent de toute ta carrière. Il dit : *la chose à gauche du point n'existe pas*. Ne cherche pas `nom`, cherche pourquoi `utilisateur` est vide.\n\n## La méthode, en trois questions\n\n1. **Quel type ?** Il te dit la famille du problème.\n2. **Quelle ligne ?** Va la lire, vraiment la lire.\n3. **Que vaut chaque chose sur cette ligne ?** `console.log` chaque variable juste avant. Neuf fois sur dix, l'une ne vaut pas ce que tu croyais.\n\n## À retenir\n\n- Une erreur n'est pas un reproche, c'est une adresse : fichier, ligne, colonne.\n- `SyntaxError` = mal écrit. `ReferenceError` = n'existe pas. `TypeError` = existe mais mauvais type.\n- « Cannot read properties of undefined » → le problème est **avant** le point, pas après.\n- Lire le message en entier prend 5 secondes et fait gagner 20 minutes.\n","dossier":"01-04-lire-une-erreur","enonce":"\n# Exercice 01-04\n\nLe fichier `exercice.mjs` contient quatre fonctions **cassées**. Chacune provoque une erreur d'un type différent.\n\nTon travail : **corriger** chaque fonction pour qu'elle renvoie ce qu'elle annonce, sans changer sa signature ni son intention.\n\n| Fonction | Doit renvoyer | Erreur cachée |\n|---|---|---|\n| `aireRectangle(l, h)` | l × h | ReferenceError |\n| `longueurNom(personne)` | la longueur de `personne.nom` | TypeError |\n| `crier(mot)` | le mot en majuscules avec `!` | TypeError |\n| `moyenne(notes)` | la moyenne du tableau | résultat faux, aucune erreur |\n\nLe dernier est le plus important : **du code qui ne plante pas peut être faux**. C'est le bug le plus dangereux.\n\n## Corriger\n\n```\njs 01-04\n```\n\nLis chaque message d'erreur avant de toucher au code.\n","depart":"\n// Exercice 01-04 · Lire une erreur\n// Quatre fonctions cassées. Répare-les.\n// Lance `node exercice.mjs` pour voir les erreurs une par une.\n\nexport function aireRectangle(largeur, hauteur) {\n  return largueur * hauteur;\n}\n\nexport function longueurNom(personne) {\n  return personne.nom.length;\n}\n\nexport function crier(mot) {\n  return mot.toUpperCase() + \"!\";\n}\n\nexport function moyenne(notes) {\n  let total = 0;\n  for (let i = 0; i <= notes.length; i++) {\n    total += notes[i];\n  }\n  return total / notes.length;\n}\n","tests":"\nimport { test, groupe, verifier } from \"../../moteur/verif.mjs\";\nimport * as ex from \"./exercice.mjs\";\n\ngroupe(\"aireRectangle · ReferenceError\", () => {\n  test(\"ne plante plus\", () => {\n    verifier(() => ex.aireRectangle(3, 4)).neLevePasDErreur(\"une variable est mal orthographiée\");\n  });\n  test(\"calcule juste\", () => {\n    verifier(ex.aireRectangle(3, 4)).vaut(12);\n    verifier(ex.aireRectangle(2.5, 4)).vaut(10);\n  });\n});\n\ngroupe(\"longueurNom · TypeError\", () => {\n  test(\"fonctionne avec un objet complet\", () => {\n    verifier(ex.longueurNom({ nom: \"Black\" })).vaut(5);\n  });\n  test(\"ne plante pas si l'objet est vide ou absent\", () => {\n    verifier(() => ex.longueurNom({})).neLevePasDErreur(\"propriété absente : protège l'accès\");\n    verifier(() => ex.longueurNom(undefined)).neLevePasDErreur(\"aucun objet reçu : protège l'accès\");\n  });\n  test(\"renvoie 0 quand il n'y a pas de nom\", () => {\n    verifier(ex.longueurNom({})).vaut(0);\n    verifier(ex.longueurNom(undefined)).vaut(0);\n  });\n});\n\ngroupe(\"crier · TypeError\", () => {\n  test(\"crie correctement\", () => {\n    verifier(ex.crier(\"bonjour\")).vaut(\"BONJOUR!\");\n  });\n  test(\"ne plante pas sur un nombre\", () => {\n    verifier(() => ex.crier(42)).neLevePasDErreur(\"toUpperCase n'existe pas sur un nombre\");\n  });\n  test(\"gère le nombre en le convertissant\", () => {\n    verifier(ex.crier(42)).vaut(\"42!\");\n  });\n});\n\ngroupe(\"moyenne · le bug silencieux\", () => {\n  test(\"calcule la bonne moyenne\", () => {\n    verifier(ex.moyenne([10, 20, 30])).vaut(20, \"la boucle dépasse d'un cran : i <= length\");\n    verifier(ex.moyenne([5])).vaut(5);\n  });\n  test(\"ne renvoie pas NaN\", () => {\n    const r = ex.moyenne([1, 2, 3, 4]);\n    if (Number.isNaN(r)) throw new Error(\"NaN : tu additionnes un élément qui n'existe pas\");\n    verifier(r).vaut(2.5);\n  });\n  test(\"tableau vide : renvoie 0 plutôt que NaN\", () => {\n    verifier(ex.moyenne([])).vaut(0);\n  });\n});\n","solution":"export function aireRectangle(largeur, hauteur) {\n  return largeur * hauteur;          // \"largueur\" -> \"largeur\"\n}\n\nexport function longueurNom(personne) {\n  // le chaînage optionnel évite le TypeError si personne ou nom est absent\n  return personne?.nom?.length ?? 0;\n}\n\nexport function crier(mot) {\n  return String(mot).toUpperCase() + \"!\";   // String() rend la fonction tolérante\n}\n\nexport function moyenne(notes) {\n  if (notes.length === 0) return 0;\n  let total = 0;\n  for (let i = 0; i < notes.length; i++) {   // < et non <=\n    total += notes[i];\n  }\n  return total / notes.length;\n}"}]},{"num":"02","titre":"Bases du langage","intro":"Variables, types, conditions, boucles. Le socle sur lequel tout le reste repose.","modules":[{"code":"02-01","titre":"Variables : let et const","min":30,"pret":true,"lecon":"\n# 02-01 · Variables : let et const\n\n**30 min · après 01-04**\n\nUne variable est une étiquette posée sur une valeur. Trois mots-clés existent pour en créer, tu n'en utiliseras que deux.\n\n## const : par défaut, toujours\n\n```js\nconst tauxTva = 0.2;\ntauxTva = 0.1;        // TypeError: Assignment to constant variable.\n```\n\n`const` interdit de **réaffecter** l'étiquette. Commence toujours par `const`. Tu passeras à `let` seulement quand le compilateur — ou la logique — te forcera la main. Résultat : ton code devient plus facile à suivre, parce qu'on sait au premier regard ce qui ne changera pas.\n\n## let : quand la valeur doit changer\n\n```js\nlet compteur = 0;\ncompteur = compteur + 1;   // parfaitement valide\n```\n\nCas typiques : un compteur, un accumulateur dans une boucle, une valeur qui dépend d'une condition.\n\n## var : ne l'utilise pas\n\n`var` existe encore pour des raisons historiques. Il ignore les blocs, autorise la redéclaration silencieuse et remonte en haut de la fonction. Tu le rencontreras dans du vieux code ; tu ne l'écriras jamais.\n\n## Le piège : const ne rend pas immuable\n\nC'est le malentendu le plus fréquent. `const` protège **l'étiquette**, pas le **contenu**.\n\n```js\nconst panier = [\"pain\"];\npanier.push(\"lait\");     // autorisé, le tableau change\nconsole.log(panier);     // [\"pain\", \"lait\"]\n\npanier = [\"autre\"];      // TypeError, on change l'étiquette\n```\n\nRetiens la formule : *`const` empêche de changer de boîte, pas de remplir la boîte.*\n\n## Portée de bloc\n\n`let` et `const` n'existent qu'à l'intérieur des accolades où ils sont déclarés.\n\n```js\nif (true) {\n  const secret = 42;\n}\nconsole.log(secret);   // ReferenceError: secret is not defined\n```\n\nC'est une bonne nouvelle : chaque variable a un territoire clair, tu ne pollues pas le reste du programme.\n\n## Nommer correctement\n\nLe nommage est 50 % de la lisibilité d'un code.\n\n```js\n✔ const prixTotalHt = 120;\n✔ const utilisateurConnecte = true;\n✔ const MAX_TENTATIVES = 3;      // constante de configuration : majuscules\n✘ const x = 120;\n✘ const données2 = true;\n✘ const truc = 3;\n```\n\nConventions JavaScript : **camelCase** pour les variables et fonctions, majuscules avec underscores pour les constantes de configuration. Les booléens gagnent à commencer par `est`, `a`, `peut`.\n\n## À retenir\n\n- `const` par défaut, `let` seulement si nécessaire, `var` jamais.\n- `const` bloque la réaffectation, pas la mutation du contenu.\n- `let` et `const` vivent dans leur bloc `{ }`.\n- Un bon nom rend le commentaire inutile.\n","dossier":"02-01-variables-let-et-const","enonce":"\n# Exercice 02-01\n\n## 1. `TAUX_TVA`\n\nExporte une constante valant `0.2`.\n\n## 2. `prixTtc(prixHt)`\n\nRenvoie le prix TTC, calculé à partir de `TAUX_TVA`. Arrondi à **2 décimales** (un nombre, pas une chaîne).\n\n## 3. `creerCompteur()`\n\nRenvoie une fonction. Chaque appel de cette fonction renvoie le nombre d'appels effectués : 1, puis 2, puis 3…\n\n```js\nconst compter = creerCompteur();\ncompter();  // 1\ncompter();  // 2\n```\n\nDeux compteurs créés séparément sont indépendants.\n\n## 4. `ajouterArticle(panier, article)`\n\nAjoute l'article et renvoie le panier. Le paramètre `panier` est déclaré en `const` chez l'appelant : à toi de comprendre pourquoi ça fonctionne quand même.\n\n## 5. `PREUVE`\n\nExporte un objet `{ constEmpecheReaffectation, constEmpecheMutation }` avec deux booléens : les bonnes réponses à « `const` empêche-t-il de réaffecter ? » et « `const` empêche-t-il de modifier le contenu ? ».\n\n## Corriger\n\n```\njs 02-01\n```\n","depart":"\n// Exercice 02-01 · Variables : let et const\n\n// 1. Une constante de configuration\nexport const TAUX_TVA = 0; // TODO\n\n// 2. Prix TTC arrondi à 2 décimales\nexport function prixTtc(prixHt) {\n  // TODO\n}\n\n// 3. Un compteur indépendant à chaque création\nexport function creerCompteur() {\n  // TODO : déclare ici la variable qui doit changer, puis renvoie une fonction\n}\n\n// 4. Ajoute un article et renvoie le panier\nexport function ajouterArticle(panier, article) {\n  // TODO\n}\n\n// 5. Ce que const empêche vraiment\nexport const PREUVE = {\n  constEmpecheReaffectation: null, // TODO true ou false\n  constEmpecheMutation: null       // TODO true ou false\n};\n","tests":"\nimport { test, groupe, verifier } from \"../../moteur/verif.mjs\";\nimport * as ex from \"./exercice.mjs\";\n\ngroupe(\"TAUX_TVA\", () => {\n  test(\"vaut 0.2\", () => verifier(ex.TAUX_TVA).vaut(0.2));\n});\n\ngroupe(\"prixTtc\", () => {\n  test(\"calcule un TTC simple\", () => verifier(ex.prixTtc(100)).vaut(120));\n  test(\"arrondit à 2 décimales\", () => verifier(ex.prixTtc(19.99)).vaut(23.99));\n  test(\"renvoie un nombre, pas une chaîne\", () => {\n    verifier(ex.prixTtc(10)).estDuType(\"number\", \"toFixed renvoie du texte : reconvertis avec Number()\");\n  });\n  test(\"utilise bien TAUX_TVA et pas 0.2 codé en dur\", () => {\n    // 0 HT doit donner 0 quel que soit le taux\n    verifier(ex.prixTtc(0)).vaut(0);\n  });\n});\n\ngroupe(\"creerCompteur\", () => {\n  test(\"compte 1, 2, 3\", () => {\n    const c = ex.creerCompteur();\n    verifier(c()).vaut(1);\n    verifier(c()).vaut(2);\n    verifier(c()).vaut(3);\n  });\n  test(\"deux compteurs sont indépendants\", () => {\n    const a = ex.creerCompteur(), b = ex.creerCompteur();\n    a(); a();\n    verifier(b()).vaut(1, \"b ne doit pas hériter des appels de a\");\n    verifier(a()).vaut(3);\n  });\n});\n\ngroupe(\"ajouterArticle\", () => {\n  test(\"ajoute et renvoie le panier\", () => {\n    const p = [\"pain\"];\n    verifier(ex.ajouterArticle(p, \"lait\")).vaut([\"pain\", \"lait\"]);\n  });\n  test(\"fonctionne sur un panier déclaré en const\", () => {\n    const p = [];\n    ex.ajouterArticle(p, \"oeufs\");\n    verifier(p).vaut([\"oeufs\"], \"const autorise la mutation du contenu\");\n  });\n});\n\ngroupe(\"PREUVE\", () => {\n  test(\"const empêche la réaffectation\", () => {\n    verifier(ex.PREUVE.constEmpecheReaffectation).estVrai();\n  });\n  test(\"const n'empêche pas la mutation\", () => {\n    verifier(ex.PREUVE.constEmpecheMutation).estFaux();\n  });\n});\n","solution":"export const TAUX_TVA = 0.2;\n\nexport function prixTtc(prixHt) {\n  // toFixed renvoie une chaîne : Number() la reconvertit\n  return Number((prixHt * (1 + TAUX_TVA)).toFixed(2));\n}\n\nexport function creerCompteur() {\n  let appels = 0;              // let : cette valeur doit changer\n  return function () {\n    appels = appels + 1;\n    return appels;\n  };\n}\n\nexport function ajouterArticle(panier, article) {\n  panier.push(article);        // mutation autorisée même si l'appelant a utilisé const\n  return panier;\n}\n\nexport const PREUVE = {\n  constEmpecheReaffectation: true,\n  constEmpecheMutation: false\n};"},{"code":"02-02","titre":"Les types primitifs","min":30,"pret":true,"lecon":"\n# 02-02 · Les types primitifs\n\n**30 min · après 02-01**\n\nJavaScript a sept types primitifs. Tu en utiliseras cinq tous les jours, deux presque jamais.\n\n| Type | Exemple | À quoi ça sert |\n|---|---|---|\n| `string` | `\"Black\"` | du texte |\n| `number` | `42`, `3.14`, `-0.5` | tous les nombres, entiers ou non |\n| `boolean` | `true`, `false` | vrai / faux |\n| `undefined` | `undefined` | « pas encore de valeur » |\n| `null` | `null` | « volontairement vide » |\n| `bigint` | `9007199254740993n` | entiers gigantesques (rare) |\n| `symbol` | `Symbol(\"id\")` | clés uniques (rare) |\n\nTout le reste — tableaux, objets, fonctions, dates — n'est pas primitif. C'est de la famille `object`.\n\n## typeof\n\nL'opérateur qui interroge le type d'une valeur :\n\n```js\ntypeof \"Black\"     // \"string\"\ntypeof 42          // \"number\"\ntypeof true        // \"boolean\"\ntypeof undefined   // \"undefined\"\ntypeof {}          // \"object\"\ntypeof []          // \"object\"     ← un tableau EST un objet\ntypeof function(){}// \"function\"\ntypeof null        // \"object\"     ← bug historique, jamais corrigé\n```\n\nRetiens les deux dernières lignes : `typeof []` vaut `\"object\"` et `typeof null` vaut `\"object\"`. Ce sont des questions d'entretien classiques.\n\nPour détecter un tableau, il existe une fonction dédiée :\n\n```js\nArray.isArray([]);    // true\nArray.isArray({});    // false\n```\n\n## Un seul type de nombre\n\nPas d'`int`, pas de `float`. `42` et `42.0` sont la même chose. Conséquence connue :\n\n```js\n0.1 + 0.2            // 0.30000000000000004\n0.1 + 0.2 === 0.3    // false\n```\n\nCe n'est pas un bug de JavaScript mais du format binaire des décimaux, commun à presque tous les langages. En pratique : ne compare jamais deux flottants avec `===`, et pour de l'argent, travaille en centimes (nombres entiers).\n\n## NaN\n\n`NaN` — *Not a Number* — est le résultat d'un calcul numérique impossible.\n\n```js\nNumber(\"abc\")      // NaN\n0 / 0              // NaN\ntypeof NaN         // \"number\"   ← oui, NaN est de type number\nNaN === NaN        // false      ← il n'est même pas égal à lui-même\nNumber.isNaN(NaN)  // true       ← la seule façon fiable de le détecter\n```\n\n## null contre undefined\n\n- `undefined` : la variable existe mais personne ne lui a donné de valeur. C'est JavaScript qui le met.\n- `null` : quelqu'un a **décidé** que c'était vide. C'est le développeur qui le met.\n\n```js\nlet a;                    // undefined\nconst b = null;           // null, choix explicite\nfunction f() {}\nf();                      // undefined (aucun return)\n```\n\n## À retenir\n\n- Sept primitifs, cinq utiles : string, number, boolean, undefined, null.\n- `typeof null === \"object\"` et `typeof [] === \"object\"` : deux pièges célèbres.\n- `Array.isArray()` pour les tableaux, `Number.isNaN()` pour NaN.\n- Un seul type numérique, donc des surprises sur les décimaux.\n- `undefined` = pas rempli ; `null` = vidé exprès.\n","dossier":"02-02-les-types-primitifs","enonce":"\n# Exercice 02-02\n\n## 1. `typeReel(valeur)`\n\nRenvoie le type de la valeur sous forme de chaîne, mais **en corrigeant les deux pièges** de `typeof` :\n\n- un tableau doit renvoyer `\"array\"`\n- `null` doit renvoyer `\"null\"`\n\nTout le reste se comporte comme `typeof`.\n\n## 2. `decrire(valeur)`\n\nRenvoie une phrase au format exact :\n\n```\n42 est de type number\n\"Black\" est de type string\nnull est de type null\n[1,2] est de type array\n```\n\nLes chaînes sont entourées de guillemets doubles, les tableaux affichés au format JSON compact.\n\n## 3. `estVraimentUnNombre(valeur)`\n\nRenvoie `true` seulement si la valeur est un nombre **utilisable** : type number, ni `NaN`, ni `Infinity`.\n\n## 4. `PIEGES`\n\nExporte un objet avec les bonnes réponses :\n\n```js\n{\n  typeofNull: \"...\",        // ce que renvoie typeof null\n  typeofTableau: \"...\",     // ce que renvoie typeof []\n  nanEstEgalANan: ...,      // NaN === NaN\n  typeofNan: \"...\"          // typeof NaN\n}\n```\n\n## Corriger\n\n```\njs 02-02\n```\n","depart":"\n// Exercice 02-02 · Les types primitifs\n\nexport function typeReel(valeur) {\n  // TODO : comme typeof, mais \"array\" pour les tableaux et \"null\" pour null\n}\n\nexport function decrire(valeur) {\n  // TODO : `<valeur> est de type <type>`\n  // rappel : les chaînes sont entre guillemets, les tableaux en JSON compact\n}\n\nexport function estVraimentUnNombre(valeur) {\n  // TODO : number, ni NaN, ni Infinity\n}\n\nexport const PIEGES = {\n  typeofNull: \"\",\n  typeofTableau: \"\",\n  nanEstEgalANan: null,\n  typeofNan: \"\"\n};\n","tests":"\nimport { test, groupe, verifier } from \"../../moteur/verif.mjs\";\nimport * as ex from \"./exercice.mjs\";\n\ngroupe(\"typeReel\", () => {\n  test(\"types simples\", () => {\n    verifier(ex.typeReel(\"a\")).vaut(\"string\");\n    verifier(ex.typeReel(1)).vaut(\"number\");\n    verifier(ex.typeReel(true)).vaut(\"boolean\");\n    verifier(ex.typeReel(undefined)).vaut(\"undefined\");\n  });\n  test(\"corrige le piège du tableau\", () => {\n    verifier(ex.typeReel([])).vaut(\"array\");\n    verifier(ex.typeReel([1, 2])).vaut(\"array\");\n  });\n  test(\"corrige le piège de null\", () => {\n    verifier(ex.typeReel(null)).vaut(\"null\");\n  });\n  test(\"un objet reste un objet\", () => {\n    verifier(ex.typeReel({})).vaut(\"object\");\n  });\n  test(\"une fonction reste une fonction\", () => {\n    verifier(ex.typeReel(() => {})).vaut(\"function\");\n  });\n});\n\ngroupe(\"decrire\", () => {\n  test(\"nombre\", () => verifier(ex.decrire(42)).vaut(\"42 est de type number\"));\n  test(\"chaîne, avec guillemets\", () => verifier(ex.decrire(\"Black\")).vaut('\"Black\" est de type string'));\n  test(\"null\", () => verifier(ex.decrire(null)).vaut(\"null est de type null\"));\n  test(\"tableau en JSON compact\", () => verifier(ex.decrire([1, 2])).vaut(\"[1,2] est de type array\"));\n  test(\"booléen\", () => verifier(ex.decrire(false)).vaut(\"false est de type boolean\"));\n});\n\ngroupe(\"estVraimentUnNombre\", () => {\n  test(\"accepte les nombres normaux\", () => {\n    verifier(ex.estVraimentUnNombre(0)).estVrai();\n    verifier(ex.estVraimentUnNombre(-3.5)).estVrai();\n  });\n  test(\"refuse NaN\", () => verifier(ex.estVraimentUnNombre(NaN)).estFaux());\n  test(\"refuse Infinity\", () => verifier(ex.estVraimentUnNombre(Infinity)).estFaux());\n  test(\"refuse une chaîne, même numérique\", () => {\n    verifier(ex.estVraimentUnNombre(\"42\")).estFaux(\"\\\"42\\\" est une chaîne\");\n  });\n  test(\"refuse null et undefined\", () => {\n    verifier(ex.estVraimentUnNombre(null)).estFaux();\n    verifier(ex.estVraimentUnNombre(undefined)).estFaux();\n  });\n});\n\ngroupe(\"PIEGES\", () => {\n  test(\"typeof null\", () => verifier(ex.PIEGES.typeofNull).vaut(\"object\"));\n  test(\"typeof []\", () => verifier(ex.PIEGES.typeofTableau).vaut(\"object\"));\n  test(\"NaN === NaN\", () => verifier(ex.PIEGES.nanEstEgalANan).estFaux());\n  test(\"typeof NaN\", () => verifier(ex.PIEGES.typeofNan).vaut(\"number\"));\n});\n","solution":"export function typeReel(valeur) {\n  if (valeur === null) return \"null\";\n  if (Array.isArray(valeur)) return \"array\";\n  return typeof valeur;\n}\n\nexport function decrire(valeur) {\n  const type = typeReel(valeur);\n  let affichage;\n  if (type === \"string\") affichage = JSON.stringify(valeur);   // ajoute les guillemets\n  else if (type === \"array\" || type === \"object\") affichage = JSON.stringify(valeur);\n  else affichage = String(valeur);\n  return `${affichage} est de type ${type}`;\n}\n\nexport function estVraimentUnNombre(valeur) {\n  return typeof valeur === \"number\" && Number.isFinite(valeur);\n}\n\nexport const PIEGES = {\n  typeofNull: \"object\",\n  typeofTableau: \"object\",\n  nanEstEgalANan: false,\n  typeofNan: \"number\"\n};"},{"code":"02-03","titre":"Chaînes de caractères","min":45,"pret":true,"lecon":"\n# 02-03 · Chaînes de caractères\n\n**45 min · après 02-02**\n\nLe texte est partout : noms d'utilisateurs, messages d'erreur, contenu de page. Ce module te donne la boîte à outils complète.\n\n## Trois façons d'écrire une chaîne\n\n```js\nconst a = 'simple';\nconst b = \"double\";\nconst c = `gravé`;     // backtick : AltGr + 7 sur un clavier français\n```\n\nLes deux premières sont équivalentes. **Utilise systématiquement la troisième** dès qu'il y a une variable à insérer.\n\n## Template literals\n\n```js\nconst prenom = \"Black\";\nconst age = 20;\n\n// à éviter\nconst v1 = \"Je suis \" + prenom + \" et j'ai \" + age + \" ans.\";\n\n// à préférer\nconst v2 = `Je suis ${prenom} et j'ai ${age} ans.`;\n```\n\nDans `${ }` tu peux mettre n'importe quelle expression : `${age * 2}`, `${prenom.toUpperCase()}`, un ternaire. Les backticks gèrent aussi le multiligne sans `\\n`.\n\n## Les chaînes sont immuables\n\nAucune méthode ne modifie la chaîne d'origine. Elles **renvoient une nouvelle chaîne**.\n\n```js\nconst mot = \"bonjour\";\nmot.toUpperCase();          // \"BONJOUR\"\nconsole.log(mot);           // \"bonjour\"  ← inchangé !\n\nconst crie = mot.toUpperCase();   // il faut récupérer le résultat\n```\n\nC'est l'erreur silencieuse classique : appeler une méthode et oublier de garder son retour.\n\n## Les méthodes à connaître par cœur\n\n```js\nconst s = \"  Bonjour le monde  \";\n\ns.length                 // 21  (une propriété, pas une méthode : sans parenthèses)\ns.trim()                 // \"Bonjour le monde\"\ns.toUpperCase()          // \"  BONJOUR LE MONDE  \"\ns.toLowerCase()\ns.includes(\"monde\")      // true\ns.startsWith(\"  Bon\")    // true\ns.endsWith(\"  \")         // true\ns.indexOf(\"le\")          // 10   (-1 si absent)\ns.replace(\"monde\", \"JS\") // remplace la PREMIÈRE occurrence\ns.replaceAll(\"o\", \"0\")   // remplace toutes les occurrences\ns.split(\" \")             // découpe en tableau\ns.at(0)                  // \"​ \" premier caractère ; .at(-1) = le dernier\ns.padStart(3, \"0\")       // complète à gauche\ns.repeat(2)\n```\n\n## slice : extraire un morceau\n\n```js\nconst mot = \"JavaScript\";\nmot.slice(0, 4)      // \"Java\"      de l'index 0 jusqu'à 4 non inclus\nmot.slice(4)         // \"Script\"    de 4 jusqu'à la fin\nmot.slice(-6)        // \"Script\"    les 6 derniers\n```\n\nL'index de fin est toujours **exclu**. C'est vrai pour `slice` sur les chaînes comme sur les tableaux.\n\n## Majuscule sur la première lettre\n\nIl n'existe pas de méthode `capitalize` en JavaScript. Le motif à connaître :\n\n```js\nconst mot = \"black\";\nconst cap = mot.at(0).toUpperCase() + mot.slice(1);   // \"Black\"\n```\n\n## À retenir\n\n- Backticks + `${}` par défaut pour tout ce qui contient une variable.\n- Une chaîne ne se modifie jamais : récupère toujours le retour de la méthode.\n- `length` est une propriété (sans parenthèses), tout le reste sont des méthodes.\n- Dans `slice(a, b)`, `b` est exclu.\n- Pas de `capitalize` : `at(0).toUpperCase() + slice(1)`.\n","dossier":"02-03-chaines-de-caracteres","enonce":"\n# Exercice 02-03\n\n## 1. `capitaliser(mot)`\n\n`\"black\"` → `\"Black\"`. Une chaîne vide renvoie une chaîne vide. Le reste du mot passe en minuscules : `\"bLACK\"` → `\"Black\"`.\n\n## 2. `formaterNom(nomComplet)`\n\n`\"jean dupont\"` → `\"Dupont, Jean\"`. Le nom de famille en premier, capitalisé, puis le prénom.\n\n## 3. `initiales(nomComplet)`\n\n`\"jean dupont\"` → `\"J.D.\"`. Fonctionne avec deux ou trois mots : `\"jean paul dupont\"` → `\"J.P.D.\"`.\n\n## 4. `tronquer(texte, longueurMax)`\n\nSi le texte dépasse `longueurMax`, le couper et ajouter `\"…\"` — le total ne doit **pas** dépasser `longueurMax`. Sinon, renvoyer le texte tel quel.\n\n```js\ntronquer(\"Bonjour le monde\", 10)  // \"Bonjour l…\"   (10 caractères)\ntronquer(\"Salut\", 10)             // \"Salut\"\n```\n\n## 5. `compterOccurrences(texte, lettre)`\n\nNombre d'apparitions de la lettre, **sans tenir compte de la casse**.\n\n```js\ncompterOccurrences(\"Bonjour Bob\", \"b\")  // 3\n```\n\n## Corriger\n\n```\njs 02-03\n```\n","depart":"\n// Exercice 02-03 · Chaînes de caractères\n\nexport function capitaliser(mot) {\n  // TODO\n}\n\nexport function formaterNom(nomComplet) {\n  // TODO : \"jean dupont\" -> \"Dupont, Jean\"\n}\n\nexport function initiales(nomComplet) {\n  // TODO : \"jean dupont\" -> \"J.D.\"\n}\n\nexport function tronquer(texte, longueurMax) {\n  // TODO : ajoute \"…\" sans dépasser longueurMax au total\n}\n\nexport function compterOccurrences(texte, lettre) {\n  // TODO : insensible à la casse\n}\n","tests":"\nimport { test, groupe, verifier } from \"../../moteur/verif.mjs\";\nimport * as ex from \"./exercice.mjs\";\n\ngroupe(\"capitaliser\", () => {\n  test(\"cas simple\", () => verifier(ex.capitaliser(\"black\")).vaut(\"Black\"));\n  test(\"met le reste en minuscules\", () => verifier(ex.capitaliser(\"bLACK\")).vaut(\"Black\"));\n  test(\"chaîne vide\", () => verifier(ex.capitaliser(\"\")).vaut(\"\", \"ne doit pas planter sur une chaîne vide\"));\n  test(\"une seule lettre\", () => verifier(ex.capitaliser(\"a\")).vaut(\"A\"));\n});\n\ngroupe(\"formaterNom\", () => {\n  test(\"inverse et capitalise\", () => verifier(ex.formaterNom(\"jean dupont\")).vaut(\"Dupont, Jean\"));\n  test(\"insensible à la casse d'entrée\", () => verifier(ex.formaterNom(\"JEAN DUPONT\")).vaut(\"Dupont, Jean\"));\n});\n\ngroupe(\"initiales\", () => {\n  test(\"deux mots\", () => verifier(ex.initiales(\"jean dupont\")).vaut(\"J.D.\"));\n  test(\"trois mots\", () => verifier(ex.initiales(\"jean paul dupont\")).vaut(\"J.P.D.\"));\n  test(\"un seul mot\", () => verifier(ex.initiales(\"black\")).vaut(\"B.\"));\n});\n\ngroupe(\"tronquer\", () => {\n  test(\"coupe et ajoute les points de suspension\", () => {\n    verifier(ex.tronquer(\"Bonjour le monde\", 10)).vaut(\"Bonjour l…\");\n  });\n  test(\"le total ne dépasse jamais longueurMax\", () => {\n    verifier(ex.tronquer(\"Bonjour le monde\", 10)).aPourLongueur(10);\n    verifier(ex.tronquer(\"abcdefghij\", 5)).aPourLongueur(5);\n  });\n  test(\"laisse le texte court intact\", () => {\n    verifier(ex.tronquer(\"Salut\", 10)).vaut(\"Salut\");\n  });\n  test(\"texte exactement à la limite : intact\", () => {\n    verifier(ex.tronquer(\"abcde\", 5)).vaut(\"abcde\");\n  });\n});\n\ngroupe(\"compterOccurrences\", () => {\n  test(\"compte sans tenir compte de la casse\", () => {\n    verifier(ex.compterOccurrences(\"Bonjour Bob\", \"b\")).vaut(3);\n    verifier(ex.compterOccurrences(\"Bonjour Bob\", \"B\")).vaut(3);\n  });\n  test(\"renvoie 0 si absente\", () => verifier(ex.compterOccurrences(\"abc\", \"z\")).vaut(0));\n  test(\"texte vide\", () => verifier(ex.compterOccurrences(\"\", \"a\")).vaut(0));\n});\n","solution":"export function capitaliser(mot) {\n  if (!mot) return \"\";\n  return mot.at(0).toUpperCase() + mot.slice(1).toLowerCase();\n}\n\nexport function formaterNom(nomComplet) {\n  const [prenom, nom] = nomComplet.trim().split(\" \");\n  return `${capitaliser(nom)}, ${capitaliser(prenom)}`;\n}\n\nexport function initiales(nomComplet) {\n  return nomComplet\n    .trim()\n    .split(\" \")\n    .map(mot => mot.at(0).toUpperCase() + \".\")\n    .join(\"\");\n}\n\nexport function tronquer(texte, longueurMax) {\n  if (texte.length <= longueurMax) return texte;\n  return texte.slice(0, longueurMax - 1) + \"…\";\n}\n\nexport function compterOccurrences(texte, lettre) {\n  const t = texte.toLowerCase();\n  const l = lettre.toLowerCase();\n  let n = 0;\n  for (const c of t) {\n    if (c === l) n++;\n  }\n  return n;\n}"},{"code":"02-04","titre":"Nombres et Math","min":30,"pret":true,"lecon":"\n# 02-04 · Nombres et Math\n\n**30 min · après 02-03**\n\n## Les opérateurs\n\n```js\n7 + 2      // 9\n7 - 2      // 5\n7 * 2      // 14\n7 / 2      // 3.5     ← pas de division entière automatique\n7 % 2      // 1       ← reste de la division (modulo)\n7 ** 2     // 49      ← puissance\n```\n\nLe **modulo** est plus utile qu'il n'y paraît :\n\n```js\nn % 2 === 0            // n est pair\nn % 3 === 0            // n est divisible par 3\n(i + 1) % longueur     // revenir à 0 après le dernier index (carrousel)\n```\n\n## Priorités\n\n`*`, `/`, `%` avant `+`, `-`. En cas de doute, mets des parenthèses : personne n'a jamais perdu de temps à cause de parenthèses en trop.\n\n```js\n2 + 3 * 4        // 14\n(2 + 3) * 4      // 20\n```\n\n## Raccourcis d'affectation\n\n```js\nlet n = 10;\nn += 5;    // 15   équivaut à n = n + 5\nn -= 3;    // 12\nn *= 2;    // 24\nn /= 4;    // 6\nn++;       // 7    incrémente de 1\nn--;       // 6\n```\n\n## Math\n\n```js\nMath.round(4.5)      // 5     arrondi classique\nMath.floor(4.9)      // 4     plancher, vers le bas\nMath.ceil(4.1)       // 5     plafond, vers le haut\nMath.trunc(-4.9)     // -4    coupe la partie décimale\nMath.abs(-7)         // 7     valeur absolue\nMath.min(3, 9, 1)    // 1\nMath.max(3, 9, 1)    // 9\nMath.sqrt(16)        // 4\nMath.random()        // un décimal dans [0, 1[\n```\n\nAttention à `Math.floor` sur les négatifs : `Math.floor(-4.1)` vaut `-5`, pas `-4`. Pour couper vers zéro, c'est `Math.trunc`.\n\n## Nombre aléatoire dans un intervalle\n\nLe motif à mémoriser, entier entre `min` et `max` **inclus** :\n\n```js\nMath.floor(Math.random() * (max - min + 1)) + min\n```\n\n`Math.random()` seul ne suffit jamais : il faut l'étirer sur la plage voulue, puis arrondir vers le bas.\n\n## toFixed : attention au type\n\n```js\nconst prix = 19.999;\nprix.toFixed(2)            // \"20.00\"   ← une CHAÎNE\nNumber(prix.toFixed(2))    // 20        ← un nombre\n```\n\n`toFixed` sert à **afficher**. Dès que tu veux continuer à calculer, reconvertis avec `Number()`. Beaucoup de bugs de facturation viennent de là.\n\n## Arrondir à un pas donné\n\nPour arrondir aux 5 centimes, aux 10, aux 0,25 :\n\n```js\nconst arrondirAu = (n, pas) => Math.round(n / pas) * pas;\narrondirAu(12.37, 0.05)   // 12.35\narrondirAu(127, 10)       // 130\n```\n\n## À retenir\n\n- `/` donne toujours un décimal ; `%` donne le reste et sert à tester la divisibilité.\n- `Math.floor` descend même sur les négatifs ; `Math.trunc` coupe vers zéro.\n- Aléatoire entier inclusif : `Math.floor(Math.random() * (max - min + 1)) + min`.\n- `toFixed` renvoie du texte. Toujours `Number(...)` derrière si tu recalcules.\n","dossier":"02-04-nombres-et-math","enonce":"\n# Exercice 02-04\n\n## 1. `aleatoireEntre(min, max)`\n\nUn entier aléatoire entre `min` et `max`, **bornes incluses**.\n\n## 2. `arrondirAu(nombre, pas)`\n\n`arrondirAu(12.37, 0.05)` → `12.35`. `arrondirAu(127, 10)` → `130`.\n\nAttention : à cause des flottants, `Math.round(n / pas) * pas` peut produire `12.350000000000001`. Nettoie le résultat.\n\n## 3. `tva(prixHt, taux)`\n\nRenvoie le montant de TVA arrondi à 2 décimales, sous forme de **nombre**.\n\n```js\ntva(100, 0.2)     // 20\ntva(19.99, 0.2)   // 4\n```\n\n## 4. `moyenne(...nombres)`\n\nAccepte un nombre libre d'arguments. Renvoie la moyenne, ou `0` si aucun argument.\n\n```js\nmoyenne(10, 20, 30)  // 20\nmoyenne()            // 0\n```\n\n## 5. `estPair(n)` et `estDivisiblePar(n, d)`\n\nDeux booléens, en utilisant le modulo.\n\n## 6. `secondesEnDuree(secondes)`\n\n`3725` → `\"1h 02m 05s\"`. Minutes et secondes sur deux chiffres, heures sans zéro devant.\n\n## Corriger\n\n```\njs 02-04\n```\n","depart":"\n// Exercice 02-04 · Nombres et Math\n\nexport function aleatoireEntre(min, max) {\n  // TODO : entier, bornes incluses\n}\n\nexport function arrondirAu(nombre, pas) {\n  // TODO : attention aux flottants\n}\n\nexport function tva(prixHt, taux) {\n  // TODO : nombre arrondi à 2 décimales\n}\n\nexport function moyenne(...nombres) {\n  // TODO : 0 si aucun argument\n}\n\nexport function estPair(n) {\n  // TODO\n}\n\nexport function estDivisiblePar(n, d) {\n  // TODO\n}\n\nexport function secondesEnDuree(secondes) {\n  // TODO : 3725 -> \"1h 02m 05s\"\n}\n","tests":"\nimport { test, groupe, verifier } from \"../../moteur/verif.mjs\";\nimport * as ex from \"./exercice.mjs\";\n\ngroupe(\"aleatoireEntre\", () => {\n  test(\"reste dans l'intervalle sur 500 tirages\", () => {\n    for (let i = 0; i < 500; i++) {\n      const n = ex.aleatoireEntre(10, 20);\n      if (n < 10 || n > 20) throw new Error(\"valeur hors bornes : \" + n);\n      if (!Number.isInteger(n)) throw new Error(\"valeur non entière : \" + n);\n    }\n  });\n  test(\"atteint les deux bornes (inclusives)\", () => {\n    const vus = new Set();\n    for (let i = 0; i < 3000; i++) vus.add(ex.aleatoireEntre(1, 3));\n    verifier(vus.has(1)).estVrai(\"la borne min doit être atteignable\");\n    verifier(vus.has(3)).estVrai(\"la borne max doit être atteignable : (max - min + 1)\");\n    verifier(vus.size).vaut(3);\n  });\n  test(\"min égal à max\", () => verifier(ex.aleatoireEntre(7, 7)).vaut(7));\n});\n\ngroupe(\"arrondirAu\", () => {\n  test(\"au pas de 0.05\", () => verifier(ex.arrondirAu(12.37, 0.05)).vaut(12.35));\n  test(\"à la dizaine\", () => verifier(ex.arrondirAu(127, 10)).vaut(130));\n  test(\"au quart\", () => verifier(ex.arrondirAu(3.6, 0.25)).vaut(3.5));\n  test(\"pas de résidu flottant\", () => {\n    const r = ex.arrondirAu(12.37, 0.05);\n    verifier(String(r)).vaut(\"12.35\", \"nettoie le résultat, on obtient sinon 12.350000000000001\");\n  });\n});\n\ngroupe(\"tva\", () => {\n  test(\"cas simple\", () => verifier(ex.tva(100, 0.2)).vaut(20));\n  test(\"arrondi à 2 décimales\", () => verifier(ex.tva(19.99, 0.2)).vaut(4));\n  test(\"renvoie un nombre\", () => verifier(ex.tva(10, 0.2)).estDuType(\"number\"));\n  test(\"taux différent\", () => verifier(ex.tva(200, 0.055)).vaut(11));\n});\n\ngroupe(\"moyenne\", () => {\n  test(\"trois valeurs\", () => verifier(ex.moyenne(10, 20, 30)).vaut(20));\n  test(\"une valeur\", () => verifier(ex.moyenne(7)).vaut(7));\n  test(\"aucun argument renvoie 0\", () => verifier(ex.moyenne()).vaut(0, \"évite la division par zéro\"));\n  test(\"décimaux\", () => verifier(ex.moyenne(1, 2)).vautEnviron(1.5));\n});\n\ngroupe(\"estPair / estDivisiblePar\", () => {\n  test(\"estPair\", () => {\n    verifier(ex.estPair(4)).estVrai();\n    verifier(ex.estPair(7)).estFaux();\n    verifier(ex.estPair(0)).estVrai();\n  });\n  test(\"estDivisiblePar\", () => {\n    verifier(ex.estDivisiblePar(9, 3)).estVrai();\n    verifier(ex.estDivisiblePar(10, 3)).estFaux();\n  });\n});\n\ngroupe(\"secondesEnDuree\", () => {\n  test(\"cas de l'énoncé\", () => verifier(ex.secondesEnDuree(3725)).vaut(\"1h 02m 05s\"));\n  test(\"moins d'une heure\", () => verifier(ex.secondesEnDuree(65)).vaut(\"0h 01m 05s\"));\n  test(\"zéro\", () => verifier(ex.secondesEnDuree(0)).vaut(\"0h 00m 00s\"));\n  test(\"plusieurs heures\", () => verifier(ex.secondesEnDuree(36000)).vaut(\"10h 00m 00s\"));\n});\n","solution":"export function aleatoireEntre(min, max) {\n  return Math.floor(Math.random() * (max - min + 1)) + min;\n}\n\nexport function arrondirAu(nombre, pas) {\n  // le toPrecision efface le résidu binaire (12.350000000000001 -> 12.35)\n  return Number((Math.round(nombre / pas) * pas).toPrecision(12));\n}\n\nexport function tva(prixHt, taux) {\n  return Number((prixHt * taux).toFixed(2));\n}\n\nexport function moyenne(...nombres) {\n  if (nombres.length === 0) return 0;\n  let total = 0;\n  for (const n of nombres) total += n;\n  return total / nombres.length;\n}\n\nexport function estPair(n) {\n  return n % 2 === 0;\n}\n\nexport function estDivisiblePar(n, d) {\n  return n % d === 0;\n}\n\nexport function secondesEnDuree(secondes) {\n  const h = Math.floor(secondes / 3600);\n  const m = Math.floor((secondes % 3600) / 60);\n  const s = secondes % 60;\n  return `${h}h ${String(m).padStart(2, \"0\")}m ${String(s).padStart(2, \"0\")}s`;\n}"},{"code":"02-05","titre":"Conversion de types","min":30,"pret":true,"lecon":"\n# 02-05 · Conversion de types\n\n**30 min · après 02-04**\n\nJavaScript convertit les types tout seul, parfois contre ton intérêt. Ce module te fait passer du côté de celui qui contrôle.\n\n## Conversion explicite : celle que tu écris\n\n```js\nNumber(\"42\")       // 42\nNumber(\"42abc\")    // NaN\nNumber(\"\")         // 0        ← surprenant\nNumber(true)       // 1\nNumber(null)       // 0        ← surprenant\nNumber(undefined)  // NaN\n\nString(42)         // \"42\"\nString(null)       // \"null\"\nString([1, 2])     // \"1,2\"\n\nBoolean(0)         // false\nBoolean(\"\")        // false\nBoolean(\"0\")       // true     ← une chaîne non vide est toujours vraie\n```\n\n`parseInt` et `parseFloat` sont plus tolérants — ils lisent le début et abandonnent au premier caractère invalide :\n\n```js\nparseInt(\"42px\")      // 42\nparseFloat(\"3.5em\")   // 3.5\nNumber(\"42px\")        // NaN\n```\n\nUtilise `Number()` quand tu veux une validation stricte, `parseInt` quand tu extrais d'un texte.\n\n## Conversion implicite : celle que JavaScript décide\n\nC'est la source des bizarreries qu'on cite pour se moquer du langage. Une seule règle à retenir :\n\n> **`+` privilégie la concaténation dès qu'une chaîne est présente. Tous les autres opérateurs arithmétiques convertissent en nombre.**\n\n```js\n\"5\" + 3      // \"53\"    concaténation\n\"5\" - 3      // 2       soustraction\n\"5\" * \"2\"    // 10\n\"5\" / 2      // 2.5\n1 + \"1\"      // \"11\"\n1 - \"1\"      // 0\n```\n\nC'est exactement le bug du formulaire : un champ HTML renvoie **toujours** une chaîne. `age + 1` donne `\"201\"` au lieu de `21`. D'où le réflexe : convertis dès l'entrée.\n\n## Les valeurs falsy\n\nHuit valeurs sont considérées comme fausses dans un contexte booléen. **Tout le reste est vrai.**\n\n```js\nfalse\n0\n-0\n0n\n\"\"            // chaîne vide\nnull\nundefined\nNaN\n```\n\nConséquences à connaître :\n\n```js\nBoolean([])        // true   ← un tableau vide est VRAI\nBoolean({})        // true   ← un objet vide est VRAI\nBoolean(\"0\")       // true\nBoolean(\" \")       // true   ← un espace n'est pas une chaîne vide\n```\n\nPour tester si un tableau est vide, c'est donc `if (tab.length === 0)`, jamais `if (!tab)`.\n\n## Le piège du 0 et de la chaîne vide\n\n```js\nfunction saluer(nom) {\n  if (!nom) return \"Bonjour, inconnu\";\n  return `Bonjour, ${nom}`;\n}\n```\n\nÇa marche… jusqu'à ce qu'on passe un nom légitime qui est falsy. Le cas typique est numérique :\n\n```js\nfunction afficherStock(n) {\n  if (!n) return \"stock indisponible\";   // BUG : 0 est un stock valide !\n  return `${n} en stock`;\n}\n```\n\nQuand `0` ou `\"\"` sont des valeurs valides, teste explicitement :\n\n```js\nif (n === undefined || n === null) ...\n// ou, plus court, avec le nullish :\nconst valeur = n ?? \"indisponible\";      // ne déclenche que sur null/undefined\n```\n\n## À retenir\n\n- `Number()` est strict, `parseInt()` est tolérant.\n- `+` concatène si une chaîne est là ; `-`, `*`, `/` convertissent en nombre.\n- Huit valeurs falsy, et `[]` comme `{}` n'en font pas partie.\n- `!valeur` est dangereux quand `0` ou `\"\"` sont légitimes : préfère `?? ` ou un test explicite.\n","dossier":"02-05-conversion-de-types","enonce":"\n# Exercice 02-05\n\n## 1. `enNombre(valeur)`\n\nConvertit en nombre. Renvoie `null` si la conversion est impossible ou donne `NaN`. La chaîne vide et les espaces seuls sont considérés comme impossibles.\n\n```js\nenNombre(\"42\")    // 42\nenNombre(\"3.5\")   // 3.5\nenNombre(\"42px\")  // null\nenNombre(\"\")      // null\nenNombre(\"   \")   // null\nenNombre(null)    // null\nenNombre(true)    // null   (un booléen n'est pas un nombre saisi)\n```\n\n## 2. `PREDICTIONS`\n\nSans exécuter le code, remplis les résultats attendus. Le test comparera **tes prédictions au comportement réel** de JavaScript : si tu te trompes, c'est ta compréhension qui est corrigée, pas ton code.\n\n```js\n{\n  \"'5' + 3\": ...,\n  \"'5' - 3\": ...,\n  \"1 + '1'\": ...,\n  \"Boolean([])\": ...,\n  \"Boolean('0')\": ...,\n  \"Number('')\": ...\n}\n```\n\n## 3. `estVide(valeur)`\n\n`true` pour : `null`, `undefined`, chaîne vide ou composée uniquement d'espaces, tableau vide, objet sans propriété.\n`false` pour tout le reste — **y compris `0` et `false`**, qui sont des valeurs, pas du vide.\n\n## 4. `additionnerFormulaire(a, b)`\n\nSimule un formulaire : les deux arguments arrivent en chaînes. Renvoie leur **somme numérique**, ou `null` si l'un des deux n'est pas convertible.\n\n```js\nadditionnerFormulaire(\"20\", \"1\")   // 21   et pas \"201\"\nadditionnerFormulaire(\"20\", \"px\")  // null\n```\n\n## Corriger\n\n```\njs 02-05\n```\n","depart":"\n// Exercice 02-05 · Conversion de types\n\nexport function enNombre(valeur) {\n  // TODO : nombre ou null\n}\n\n// Remplis les valeurs SANS lancer le code, puis vérifie.\nexport const PREDICTIONS = {\n  \"'5' + 3\": null,\n  \"'5' - 3\": null,\n  \"1 + '1'\": null,\n  \"Boolean([])\": null,\n  \"Boolean('0')\": null,\n  \"Number('')\": null\n};\n\nexport function estVide(valeur) {\n  // TODO : attention, 0 et false ne sont PAS vides\n}\n\nexport function additionnerFormulaire(a, b) {\n  // TODO\n}\n","tests":"\nimport { test, groupe, verifier } from \"../../moteur/verif.mjs\";\nimport * as ex from \"./exercice.mjs\";\n\ngroupe(\"enNombre\", () => {\n  test(\"chaînes numériques\", () => {\n    verifier(ex.enNombre(\"42\")).vaut(42);\n    verifier(ex.enNombre(\"3.5\")).vaut(3.5);\n    verifier(ex.enNombre(\"-7\")).vaut(-7);\n  });\n  test(\"zéro est une valeur valide\", () => verifier(ex.enNombre(\"0\")).vaut(0));\n  test(\"refuse les chaînes impures\", () => verifier(ex.enNombre(\"42px\")).vaut(null));\n  test(\"refuse le vide et les espaces\", () => {\n    verifier(ex.enNombre(\"\")).vaut(null, \"Number('') vaut 0 : il faut l'exclure à la main\");\n    verifier(ex.enNombre(\"   \")).vaut(null);\n  });\n  test(\"refuse null, undefined, booléens\", () => {\n    verifier(ex.enNombre(null)).vaut(null, \"Number(null) vaut 0 : à exclure aussi\");\n    verifier(ex.enNombre(undefined)).vaut(null);\n    verifier(ex.enNombre(true)).vaut(null);\n  });\n  test(\"accepte un nombre déjà valide\", () => verifier(ex.enNombre(12)).vaut(12));\n});\n\ngroupe(\"PREDICTIONS · tes réponses face à la réalité\", () => {\n  const reel = {\n    \"'5' + 3\": \"5\" + 3,\n    \"'5' - 3\": \"5\" - 3,\n    \"1 + '1'\": 1 + \"1\",\n    \"Boolean([])\": Boolean([]),\n    \"Boolean('0')\": Boolean(\"0\"),\n    \"Number('')\": Number(\"\")\n  };\n  for (const [expr, attendu] of Object.entries(reel)) {\n    test(expr, () => {\n      verifier(ex.PREDICTIONS[expr]).vaut(attendu, \"relis la règle sur l'opérateur + et les valeurs falsy\");\n    });\n  }\n});\n\ngroupe(\"estVide\", () => {\n  test(\"vrais vides\", () => {\n    verifier(ex.estVide(null)).estVrai();\n    verifier(ex.estVide(undefined)).estVrai();\n    verifier(ex.estVide(\"\")).estVrai();\n    verifier(ex.estVide(\"   \")).estVrai();\n    verifier(ex.estVide([])).estVrai();\n    verifier(ex.estVide({})).estVrai();\n  });\n  test(\"0 et false ne sont pas vides\", () => {\n    verifier(ex.estVide(0)).estFaux(\"0 est une valeur\");\n    verifier(ex.estVide(false)).estFaux(\"false est une valeur\");\n  });\n  test(\"contenus non vides\", () => {\n    verifier(ex.estVide(\"a\")).estFaux();\n    verifier(ex.estVide([0])).estFaux();\n    verifier(ex.estVide({ a: 1 })).estFaux();\n  });\n});\n\ngroupe(\"additionnerFormulaire\", () => {\n  test(\"additionne au lieu de concaténer\", () => {\n    verifier(ex.additionnerFormulaire(\"20\", \"1\")).vaut(21, \"'20' + '1' donnerait '201'\");\n  });\n  test(\"gère les décimaux\", () => verifier(ex.additionnerFormulaire(\"1.5\", \"2.5\")).vaut(4));\n  test(\"zéro reste valide\", () => verifier(ex.additionnerFormulaire(\"0\", \"5\")).vaut(5));\n  test(\"refuse l'invalide\", () => {\n    verifier(ex.additionnerFormulaire(\"20\", \"px\")).vaut(null);\n    verifier(ex.additionnerFormulaire(\"\", \"1\")).vaut(null);\n  });\n});\n","solution":"export function enNombre(valeur) {\n  if (typeof valeur === \"number\") return Number.isFinite(valeur) ? valeur : null;\n  if (typeof valeur !== \"string\") return null;      // exclut null, undefined, booléens, objets\n  if (valeur.trim() === \"\") return null;            // Number(\"\") vaut 0 : on l'écarte\n  const n = Number(valeur);\n  return Number.isNaN(n) ? null : n;\n}\n\nexport const PREDICTIONS = {\n  \"'5' + 3\": \"53\",      // + concatène dès qu'il y a une chaîne\n  \"'5' - 3\": 2,         // - force la conversion en nombre\n  \"1 + '1'\": \"11\",\n  \"Boolean([])\": true,  // un tableau vide est un objet : truthy\n  \"Boolean('0')\": true, // chaîne non vide : truthy\n  \"Number('')\": 0       // la chaîne vide devient 0\n};\n\nexport function estVide(valeur) {\n  if (valeur === null || valeur === undefined) return true;\n  if (typeof valeur === \"string\") return valeur.trim() === \"\";\n  if (Array.isArray(valeur)) return valeur.length === 0;\n  if (typeof valeur === \"object\") return Object.keys(valeur).length === 0;\n  return false;   // nombres et booléens ne sont jamais \"vides\"\n}\n\nexport function additionnerFormulaire(a, b) {\n  const na = enNombre(a);\n  const nb = enNombre(b);\n  if (na === null || nb === null) return null;\n  return na + nb;\n}"},{"code":"02-06","titre":"Comparaisons et égalité stricte","min":15,"pret":true,"lecon":"\n# 02-06 · Comparaisons et égalité stricte\n\n**15 min · après 02-05**\n\n## Deux égalités, une seule à utiliser\n\n`===` compare **la valeur et le type**, sans rien convertir.\n`==` convertit avant de comparer, avec des règles tordues.\n\n```js\n5 === 5        // true\n5 === \"5\"      // false   types différents\n5 == \"5\"       // true    \"5\" est converti en 5\n```\n\nLes cas qui font la mauvaise réputation de `==` :\n\n```js\n0 == \"\"          // true\n0 == false       // true\n0 == \"0\"         // true\n\"\" == false      // true\nnull == undefined// true\n[] == false      // true    !\n[] == \"\"         // true\n\"1\" == true      // true\n```\n\n**Règle absolue : utilise toujours `===` et `!==`.** L'unique exception tolérée est `x == null`, qui teste `null` **et** `undefined` d'un coup — et même là, `x === null || x === undefined` reste plus clair.\n\n## Le cas NaN\n\n```js\nNaN === NaN            // false\nNumber.isNaN(NaN)      // true    ← la bonne méthode\nObject.is(NaN, NaN)    // true\n```\n\n## Objets et tableaux : comparaison de référence\n\n```js\n[1, 2] === [1, 2]      // false !\n{ a: 1 } === { a: 1 }  // false !\n\nconst a = [1, 2];\nconst b = a;\na === b                // true    même référence\n```\n\nDeux objets ne sont égaux que s'ils sont **le même objet en mémoire**, pas s'ils se ressemblent. C'est le sujet du module 04-04, et une des causes les plus fréquentes de bugs en React.\n\nPour comparer les contenus, on compare une représentation :\n\n```js\nJSON.stringify(a) === JSON.stringify(b)   // suffisant pour des données simples\n```\n\n## Comparer des chaînes\n\nL'ordre est celui des codes de caractères, donc les majuscules passent avant les minuscules.\n\n```js\n\"a\" < \"b\"        // true\n\"Z\" < \"a\"        // true   ← surprenant\n\"10\" < \"9\"       // true   ← comparaison texte, pas numérique !\n```\n\nPour un tri correct en français, accents inclus : `\"é\".localeCompare(\"f\")`.\n\n## Opérateurs logiques et court-circuit\n\n```js\ntrue && false    // false\ntrue || false    // true\n!true            // false\n```\n\nIls ne renvoient pas forcément un booléen, mais **une des deux valeurs** :\n\n```js\n\"a\" && \"b\"       // \"b\"     tout est vrai, on renvoie le dernier\n0 && \"b\"         // 0       s'arrête au premier faux\nnull || \"défaut\" // \"défaut\"\n\"\" || \"défaut\"   // \"défaut\"\n0 || \"défaut\"    // \"défaut\"  ← attention si 0 est légitime !\n0 ?? \"défaut\"    // 0         ← ?? ne réagit qu'à null/undefined\n```\n\nLe court-circuit est utile : dans `a && a.b`, si `a` est `null`, la deuxième partie n'est jamais évaluée, donc pas de TypeError.\n\n## À retenir\n\n- `===` toujours. `==` jamais.\n- `NaN` n'est égal à rien, y compris lui-même : `Number.isNaN()`.\n- Deux objets identiques en apparence ne sont pas `===`.\n- `\"10\" < \"9\"` est vrai : les chaînes se comparent caractère par caractère.\n- `||` réagit à tout ce qui est falsy, `??` seulement à `null` et `undefined`.\n","dossier":"02-06-comparaisons-et-egalite-stricte","enonce":"\n# Exercice 02-06\n\n## 1. `PREDICTIONS`\n\nSans lancer le code, remplis le résultat de chaque expression. Les tests confrontent tes réponses à la réalité.\n\n## 2. `memeContenu(a, b)`\n\n`true` si les deux valeurs ont le **même contenu**, même si ce sont deux objets ou tableaux distincts.\n\n```js\nmemeContenu([1, 2], [1, 2])       // true\nmemeContenu({a: 1}, {a: 1})       // true\nmemeContenu([1, 2], [2, 1])       // false\nmemeContenu(NaN, NaN)             // true   (même contenu, logiquement)\n```\n\n## 3. `valeurParDefaut(valeur, defaut)`\n\nRenvoie `defaut` **uniquement** si `valeur` est `null` ou `undefined`. `0`, `\"\"` et `false` doivent être conservés tels quels.\n\n## 4. `comparerNumerique(a, b)`\n\nCompare deux valeurs qui peuvent arriver en chaînes, **numériquement** : renvoie `-1`, `0` ou `1`.\n\n```js\ncomparerNumerique(\"10\", \"9\")   // 1    car 10 > 9\ncomparerNumerique(5, \"5\")      // 0\n```\n\n## Corriger\n\n```\njs 02-06\n```\n","depart":"\n// Exercice 02-06 · Comparaisons et égalité stricte\n\n// Réponds sans exécuter, puis lance les tests.\nexport const PREDICTIONS = {\n  \"0 == ''\": null,\n  \"0 === ''\": null,\n  \"null == undefined\": null,\n  \"null === undefined\": null,\n  \"NaN === NaN\": null,\n  \"[1,2] === [1,2]\": null,\n  \"'Z' < 'a'\": null,\n  \"'10' < '9'\": null,\n  \"0 || 'defaut'\": null,\n  \"0 ?? 'defaut'\": null\n};\n\nexport function memeContenu(a, b) {\n  // TODO\n}\n\nexport function valeurParDefaut(valeur, defaut) {\n  // TODO\n}\n\nexport function comparerNumerique(a, b) {\n  // TODO : -1, 0 ou 1\n}\n","tests":"\nimport { test, groupe, verifier } from \"../../moteur/verif.mjs\";\nimport * as ex from \"./exercice.mjs\";\n\ngroupe(\"PREDICTIONS · tes réponses face à la réalité\", () => {\n  const reel = {\n    \"0 == ''\": 0 == \"\",\n    \"0 === ''\": 0 === \"\",\n    \"null == undefined\": null == undefined,\n    \"null === undefined\": null === undefined,\n    \"NaN === NaN\": NaN === NaN,\n    \"[1,2] === [1,2]\": [1, 2] === [1, 2],\n    \"'Z' < 'a'\": \"Z\" < \"a\",\n    \"'10' < '9'\": \"10\" < \"9\",\n    \"0 || 'defaut'\": 0 || \"defaut\",\n    \"0 ?? 'defaut'\": 0 ?? \"defaut\"\n  };\n  for (const [expr, attendu] of Object.entries(reel)) {\n    test(expr, () => verifier(ex.PREDICTIONS[expr]).vaut(attendu));\n  }\n});\n\ngroupe(\"memeContenu\", () => {\n  test(\"primitifs\", () => {\n    verifier(ex.memeContenu(5, 5)).estVrai();\n    verifier(ex.memeContenu(5, \"5\")).estFaux(\"types différents\");\n  });\n  test(\"tableaux de même contenu\", () => {\n    verifier(ex.memeContenu([1, 2], [1, 2])).estVrai();\n    verifier(ex.memeContenu([1, 2], [2, 1])).estFaux(\"l'ordre compte\");\n  });\n  test(\"objets de même contenu\", () => {\n    verifier(ex.memeContenu({ a: 1 }, { a: 1 })).estVrai();\n    verifier(ex.memeContenu({ a: 1 }, { a: 2 })).estFaux();\n  });\n  test(\"NaN vaut NaN ici\", () => verifier(ex.memeContenu(NaN, NaN)).estVrai());\n  test(\"imbrication\", () => {\n    verifier(ex.memeContenu({ a: [1, { b: 2 }] }, { a: [1, { b: 2 }] })).estVrai();\n  });\n});\n\ngroupe(\"valeurParDefaut\", () => {\n  test(\"remplace null et undefined\", () => {\n    verifier(ex.valeurParDefaut(null, \"d\")).vaut(\"d\");\n    verifier(ex.valeurParDefaut(undefined, \"d\")).vaut(\"d\");\n  });\n  test(\"conserve 0, '' et false\", () => {\n    verifier(ex.valeurParDefaut(0, \"d\")).vaut(0, \"0 est une valeur légitime\");\n    verifier(ex.valeurParDefaut(\"\", \"d\")).vaut(\"\");\n    verifier(ex.valeurParDefaut(false, \"d\")).vaut(false);\n  });\n});\n\ngroupe(\"comparerNumerique\", () => {\n  test(\"compare des chaînes numériquement\", () => {\n    verifier(ex.comparerNumerique(\"10\", \"9\")).vaut(1, \"en texte '10' < '9' : convertis d'abord\");\n    verifier(ex.comparerNumerique(\"9\", \"10\")).vaut(-1);\n  });\n  test(\"égalité entre types différents\", () => verifier(ex.comparerNumerique(5, \"5\")).vaut(0));\n  test(\"négatifs\", () => verifier(ex.comparerNumerique(\"-5\", \"3\")).vaut(-1));\n});\n","solution":"export const PREDICTIONS = {\n  \"0 == ''\": true,             // == convertit '' en 0\n  \"0 === ''\": false,           // types différents\n  \"null == undefined\": true,   // seule exception utile de ==\n  \"null === undefined\": false,\n  \"NaN === NaN\": false,\n  \"[1,2] === [1,2]\": false,    // deux références différentes\n  \"'Z' < 'a'\": true,           // codes de caractères : majuscules avant minuscules\n  \"'10' < '9'\": true,          // comparaison texte, caractère par caractère\n  \"0 || 'defaut'\": \"defaut\",   // 0 est falsy\n  \"0 ?? 'defaut'\": 0           // ?? ne réagit qu'à null / undefined\n};\n\nexport function memeContenu(a, b) {\n  if (Object.is(a, b)) return true;                 // gère aussi NaN === NaN\n  if (typeof a !== typeof b) return false;\n  if (a === null || b === null || typeof a !== \"object\") return false;\n  if (Array.isArray(a) !== Array.isArray(b)) return false;\n  const ca = Object.keys(a), cb = Object.keys(b);\n  if (ca.length !== cb.length) return false;\n  return ca.every(k => cb.includes(k) && memeContenu(a[k], b[k]));\n}\n\nexport function valeurParDefaut(valeur, defaut) {\n  return valeur ?? defaut;\n}\n\nexport function comparerNumerique(a, b) {\n  const na = Number(a), nb = Number(b);\n  if (na < nb) return -1;\n  if (na > nb) return 1;\n  return 0;\n}"},{"code":"02-07","titre":"Conditions","min":45,"pret":true,"lecon":"\n# 02-07 · Conditions\n\n**45 min · après 02-06**\n\n## if / else if / else\n\n```js\nif (note >= 16) {\n  return \"très bien\";\n} else if (note >= 14) {\n  return \"bien\";\n} else {\n  return \"à revoir\";\n}\n```\n\nL'ordre compte : le premier bloc vrai gagne, les suivants ne sont même pas évalués. Écrire les conditions de la plus restrictive à la plus large évite les bugs.\n\n## Early return : le réflexe pro\n\nLe code imbriqué devient vite illisible. Plutôt que d'emboîter, sors dès que possible :\n\n```js\n// à éviter\nfunction traiter(u) {\n  if (u) {\n    if (u.actif) {\n      if (u.age >= 18) {\n        return \"ok\";\n      } else { return \"trop jeune\"; }\n    } else { return \"inactif\"; }\n  } else { return \"aucun utilisateur\"; }\n}\n\n// à préférer\nfunction traiter(u) {\n  if (!u) return \"aucun utilisateur\";\n  if (!u.actif) return \"inactif\";\n  if (u.age < 18) return \"trop jeune\";\n  return \"ok\";\n}\n```\n\nMême logique, moitié moins de charge mentale. Les cas d'exclusion en haut, le cas normal en bas. Prends cette habitude tout de suite : c'est un des marqueurs les plus visibles d'un code de niveau junior confirmé.\n\n## Le ternaire\n\nPour choisir **une valeur**, pas pour exécuter des actions.\n\n```js\nconst etiquette = age >= 18 ? \"majeur\" : \"mineur\";\n```\n\nLisible sur une ligne. Dès qu'il est imbriqué, repasse à `if`.\n\n```js\n// illisible, à ne pas faire\nconst r = a ? b ? \"x\" : \"y\" : c ? \"z\" : \"w\";\n```\n\n## switch\n\nUtile quand on compare **une même valeur** à une liste de cas précis.\n\n```js\nswitch (role) {\n  case \"admin\":\n    return \"tous les droits\";\n  case \"editeur\":\n  case \"auteur\":            // deux cas, même traitement\n    return \"peut publier\";\n  default:\n    return \"lecture seule\";\n}\n```\n\nSans `return`, il faut un `break` à la fin de chaque cas, sinon l'exécution continue dans le cas suivant. Ce comportement, l'*fallthrough*, est la source de bugs classique du `switch`. `switch` compare avec `===`.\n\n## Opérateurs logiques dans les conditions\n\n```js\nif (age >= 18 && aPermis) { }        // les deux\nif (estAdmin || estProprietaire) { } // au moins un\nif (!estBloque) { }                  // négation\n```\n\nCombine avec des parenthèses dès que tu mélanges `&&` et `||` :\n\n```js\nif ((a || b) && c) { }    // sans ambiguïté\n```\n\n## Nommer ses conditions\n\nUne condition longue devient lisible en la nommant :\n\n```js\n// avant\nif (u.age >= 18 && u.actif && !u.banni && u.emailVerifie) { }\n\n// après\nconst peutCommander = u.age >= 18 && u.actif && !u.banni && u.emailVerifie;\nif (peutCommander) { }\n```\n\n## À retenir\n\n- Early return plutôt qu'imbrication : les cas d'exclusion d'abord.\n- Le ternaire choisit une valeur, il n'orchestre pas des actions.\n- `switch` compare en `===` et « tombe » dans le cas suivant sans `break`.\n- Une condition complexe mérite un nom.\n","dossier":"02-07-conditions","enonce":"\n# Exercice 02-07\n\n## 1. `mention(note)`\n\nNote sur 20 → mention.\n\n| Note | Renvoie |\n|---|---|\n| ≥ 16 | `\"très bien\"` |\n| ≥ 14 | `\"bien\"` |\n| ≥ 12 | `\"assez bien\"` |\n| ≥ 10 | `\"passable\"` |\n| < 10 | `\"insuffisant\"` |\n\nUne note hors de l'intervalle 0–20, ou pas un nombre, renvoie `\"note invalide\"`.\n\n## 2. `droitsDe(role)`\n\nAvec un `switch` :\n\n- `\"admin\"` → `\"tous les droits\"`\n- `\"editeur\"` et `\"auteur\"` → `\"peut publier\"`\n- `\"abonne\"` → `\"peut commenter\"`\n- tout le reste → `\"lecture seule\"`\n\n## 3. `peutCommander(utilisateur)`\n\nRenvoie un objet `{ autorise, raison }`. La **première** règle qui échoue donne la raison. Ordre imposé :\n\n1. pas d'utilisateur → `\"aucun utilisateur\"`\n2. `banni` vrai → `\"compte banni\"`\n3. `actif` faux → `\"compte inactif\"`\n4. `age` < 18 → `\"mineur\"`\n5. `emailVerifie` faux → `\"email non vérifié\"`\n6. tout va bien → `{ autorise: true, raison: null }`\n\nÉcris-la en **early return**, pas en if imbriqués.\n\n## 4. `estBissextile(annee)`\n\nDivisible par 4, sauf les multiples de 100 qui ne sont pas multiples de 400.\n`2024` → `true`, `1900` → `false`, `2000` → `true`.\n\n## 5. `categorieImc(poids, taille)`\n\nIMC = poids / taille². Renvoie `\"insuffisance\"` (< 18,5), `\"normal\"` (< 25), `\"surpoids\"` (< 30), `\"obésité\"` (≥ 30). Taille nulle ou négative → `null`.\n\n## Corriger\n\n```\njs 02-07\n```\n","depart":"\n// Exercice 02-07 · Conditions\n\nexport function mention(note) {\n  // TODO\n}\n\nexport function droitsDe(role) {\n  // TODO : utilise un switch\n}\n\nexport function peutCommander(utilisateur) {\n  // TODO : early return, dans l'ordre imposé par l'énoncé\n}\n\nexport function estBissextile(annee) {\n  // TODO\n}\n\nexport function categorieImc(poids, taille) {\n  // TODO\n}\n","tests":"\nimport { test, groupe, verifier } from \"../../moteur/verif.mjs\";\nimport * as ex from \"./exercice.mjs\";\n\ngroupe(\"mention\", () => {\n  test(\"chaque palier\", () => {\n    verifier(ex.mention(18)).vaut(\"très bien\");\n    verifier(ex.mention(16)).vaut(\"très bien\");\n    verifier(ex.mention(15)).vaut(\"bien\");\n    verifier(ex.mention(14)).vaut(\"bien\");\n    verifier(ex.mention(12)).vaut(\"assez bien\");\n    verifier(ex.mention(10)).vaut(\"passable\");\n    verifier(ex.mention(9.5)).vaut(\"insuffisant\");\n    verifier(ex.mention(0)).vaut(\"insuffisant\");\n  });\n  test(\"bornes exactes\", () => {\n    verifier(ex.mention(20)).vaut(\"très bien\");\n    verifier(ex.mention(13.99)).vaut(\"assez bien\");\n  });\n  test(\"entrées invalides\", () => {\n    verifier(ex.mention(21)).vaut(\"note invalide\");\n    verifier(ex.mention(-1)).vaut(\"note invalide\");\n    verifier(ex.mention(\"12\")).vaut(\"note invalide\");\n    verifier(ex.mention(NaN)).vaut(\"note invalide\");\n  });\n});\n\ngroupe(\"droitsDe\", () => {\n  test(\"admin\", () => verifier(ex.droitsDe(\"admin\")).vaut(\"tous les droits\"));\n  test(\"editeur et auteur partagent le même cas\", () => {\n    verifier(ex.droitsDe(\"editeur\")).vaut(\"peut publier\");\n    verifier(ex.droitsDe(\"auteur\")).vaut(\"peut publier\");\n  });\n  test(\"abonne\", () => verifier(ex.droitsDe(\"abonne\")).vaut(\"peut commenter\"));\n  test(\"inconnu et vide\", () => {\n    verifier(ex.droitsDe(\"bidule\")).vaut(\"lecture seule\");\n    verifier(ex.droitsDe(undefined)).vaut(\"lecture seule\");\n  });\n  test(\"switch compare en === : pas de tolérance de casse\", () => {\n    verifier(ex.droitsDe(\"ADMIN\")).vaut(\"lecture seule\");\n  });\n});\n\ngroupe(\"peutCommander\", () => {\n  const valide = { actif: true, banni: false, age: 25, emailVerifie: true };\n  test(\"cas valide\", () => {\n    verifier(ex.peutCommander(valide)).vaut({ autorise: true, raison: null });\n  });\n  test(\"aucun utilisateur\", () => {\n    verifier(ex.peutCommander(undefined)).vaut({ autorise: false, raison: \"aucun utilisateur\" });\n    verifier(ex.peutCommander(null)).vaut({ autorise: false, raison: \"aucun utilisateur\" });\n  });\n  test(\"banni prime sur tout le reste\", () => {\n    verifier(ex.peutCommander({ ...valide, banni: true, actif: false, age: 10 }))\n      .vaut({ autorise: false, raison: \"compte banni\" }, \"l'ordre des règles est imposé\");\n  });\n  test(\"inactif\", () => {\n    verifier(ex.peutCommander({ ...valide, actif: false }))\n      .vaut({ autorise: false, raison: \"compte inactif\" });\n  });\n  test(\"mineur\", () => {\n    verifier(ex.peutCommander({ ...valide, age: 17 }))\n      .vaut({ autorise: false, raison: \"mineur\" });\n  });\n  test(\"email non vérifié\", () => {\n    verifier(ex.peutCommander({ ...valide, emailVerifie: false }))\n      .vaut({ autorise: false, raison: \"email non vérifié\" });\n  });\n  test(\"18 ans pile passe\", () => {\n    verifier(ex.peutCommander({ ...valide, age: 18 }).autorise).estVrai();\n  });\n});\n\ngroupe(\"estBissextile\", () => {\n  test(\"multiples de 4\", () => {\n    verifier(ex.estBissextile(2024)).estVrai();\n    verifier(ex.estBissextile(2023)).estFaux();\n  });\n  test(\"siècles non bissextiles\", () => {\n    verifier(ex.estBissextile(1900)).estFaux(\"multiple de 100 sans être multiple de 400\");\n    verifier(ex.estBissextile(2100)).estFaux();\n  });\n  test(\"multiples de 400\", () => {\n    verifier(ex.estBissextile(2000)).estVrai();\n    verifier(ex.estBissextile(1600)).estVrai();\n  });\n});\n\ngroupe(\"categorieImc\", () => {\n  test(\"catégories\", () => {\n    verifier(ex.categorieImc(50, 1.75)).vaut(\"insuffisance\");\n    verifier(ex.categorieImc(70, 1.75)).vaut(\"normal\");\n    verifier(ex.categorieImc(85, 1.75)).vaut(\"surpoids\");\n    verifier(ex.categorieImc(100, 1.75)).vaut(\"obésité\");\n  });\n  test(\"taille invalide\", () => {\n    verifier(ex.categorieImc(70, 0)).vaut(null, \"évite la division par zéro\");\n    verifier(ex.categorieImc(70, -1)).vaut(null);\n  });\n});\n","solution":"export function mention(note) {\n  if (typeof note !== \"number\" || Number.isNaN(note) || note < 0 || note > 20) {\n    return \"note invalide\";\n  }\n  if (note >= 16) return \"très bien\";\n  if (note >= 14) return \"bien\";\n  if (note >= 12) return \"assez bien\";\n  if (note >= 10) return \"passable\";\n  return \"insuffisant\";\n}\n\nexport function droitsDe(role) {\n  switch (role) {\n    case \"admin\":\n      return \"tous les droits\";\n    case \"editeur\":\n    case \"auteur\":\n      return \"peut publier\";\n    case \"abonne\":\n      return \"peut commenter\";\n    default:\n      return \"lecture seule\";\n  }\n}\n\nexport function peutCommander(utilisateur) {\n  if (!utilisateur) return { autorise: false, raison: \"aucun utilisateur\" };\n  if (utilisateur.banni) return { autorise: false, raison: \"compte banni\" };\n  if (!utilisateur.actif) return { autorise: false, raison: \"compte inactif\" };\n  if (utilisateur.age < 18) return { autorise: false, raison: \"mineur\" };\n  if (!utilisateur.emailVerifie) return { autorise: false, raison: \"email non vérifié\" };\n  return { autorise: true, raison: null };\n}\n\nexport function estBissextile(annee) {\n  return annee % 4 === 0 && (annee % 100 !== 0 || annee % 400 === 0);\n}\n\nexport function categorieImc(poids, taille) {\n  if (taille <= 0) return null;\n  const imc = poids / (taille * taille);\n  if (imc < 18.5) return \"insuffisance\";\n  if (imc < 25) return \"normal\";\n  if (imc < 30) return \"surpoids\";\n  return \"obésité\";\n}"},{"code":"02-08","titre":"Boucles","min":60,"pret":true,"lecon":"\n# 02-08 · Boucles\n\n**60 min · après 02-07**\n\n## for classique\n\n```js\nfor (let i = 0; i < 5; i++) {\n  console.log(i);      // 0 1 2 3 4\n}\n```\n\nTrois parties : initialisation, condition de continuation, incrément. Utile quand tu as besoin de l'**index**.\n\nLe piège universel : `<=` au lieu de `<`.\n\n```js\nconst tab = [\"a\", \"b\", \"c\"];\nfor (let i = 0; i <= tab.length; i++) {\n  console.log(tab[i]);    // a, b, c, undefined   ← un tour de trop\n}\n```\n\nUn tableau de longueur 3 a les index 0, 1, 2. La condition est donc `i < tab.length`.\n\n## for…of : le plus lisible\n\nQuand l'index ne t'intéresse pas :\n\n```js\nfor (const fruit of [\"pomme\", \"poire\"]) {\n  console.log(fruit);\n}\n```\n\nFonctionne sur les tableaux, les chaînes, les Map, les Set. À préférer par défaut.\n\n## for…in : pour les objets, et seulement eux\n\n```js\nconst u = { nom: \"Black\", age: 20 };\nfor (const cle in u) {\n  console.log(cle, u[cle]);\n}\n```\n\nNe l'utilise pas sur un tableau : il itère les **clés** sous forme de chaînes et peut inclure des propriétés héritées.\n\n## while\n\nQuand tu ne sais pas d'avance combien de tours :\n\n```js\nlet n = 100;\nlet etapes = 0;\nwhile (n > 1) {\n  n = n % 2 === 0 ? n / 2 : n * 3 + 1;\n  etapes++;\n}\n```\n\nAssure-toi que la condition finira par devenir fausse. Une boucle infinie gèle le programme — `Ctrl+C` dans le terminal pour en sortir.\n\n`do…while` exécute au moins une fois avant de tester : rare, mais utile pour redemander une saisie.\n\n## break et continue\n\n```js\nfor (const n of nombres) {\n  if (n < 0) continue;    // passe au tour suivant\n  if (n > 100) break;     // sort de la boucle\n  total += n;\n}\n```\n\n## Boucles imbriquées\n\n```js\nfor (let i = 1; i <= 3; i++) {\n  for (let j = 1; j <= 3; j++) {\n    console.log(`${i} x ${j} = ${i * j}`);\n  }\n}\n```\n\nDeux boucles imbriquées sur *n* éléments font *n²* tours. Sur 1 000 éléments, c'est un million d'opérations : réfléchis avant d'imbriquer.\n\n## Accumuler un résultat\n\nLe motif de base, que les méthodes du chapitre 05 remplaceront élégamment :\n\n```js\nconst nombres = [3, 7, 2];\nlet total = 0;                       // l'accumulateur\nfor (const n of nombres) total += n;\n// total === 12\n```\n\nPour construire un tableau :\n\n```js\nconst resultat = [];\nfor (const n of nombres) resultat.push(n * 2);\n// [6, 14, 4]\n```\n\n## À retenir\n\n- `i < longueur`, jamais `<=`.\n- `for…of` par défaut, `for` classique quand tu as besoin de l'index, `for…in` uniquement sur les objets.\n- `while` quand le nombre de tours est inconnu ; vérifie la condition de sortie.\n- `continue` saute un tour, `break` quitte la boucle.\n- Accumulateur déclaré **avant** la boucle, rempli **dedans**.\n","dossier":"02-08-boucles","enonce":"\n# Exercice 02-08\n\n## 1. `fizzbuzz(n)`\n\nRenvoie un **tableau** de 1 à `n` où : les multiples de 3 deviennent `\"Fizz\"`, ceux de 5 `\"Buzz\"`, ceux de 15 `\"FizzBuzz\"`. Les autres restent des **nombres**.\n\n```js\nfizzbuzz(5)   // [1, 2, \"Fizz\", 4, \"Buzz\"]\n```\n\n## 2. `sommePairs(n)`\n\nSomme des nombres pairs de 1 à `n` inclus. `sommePairs(10)` → `30`.\n\n## 3. `tableMultiplication(n)`\n\nTableau de 10 chaînes : `\"3 x 1 = 3\"` … `\"3 x 10 = 30\"`.\n\n## 4. `inverser(chaine)`\n\n`\"bonjour\"` → `\"ruojnob\"`. Avec une boucle, sans `split().reverse().join()`.\n\n## 5. `estPremier(n)`\n\n`true` si `n` est premier. `1` et les nombres < 1 ne sont pas premiers. Arrête la boucle dès que possible — inutile de tester au-delà de la racine carrée.\n\n## 6. `chercherPremierNegatif(nombres)`\n\nRenvoie le **premier** nombre négatif du tableau, ou `null`. Utilise `break` : ne parcours pas la suite pour rien.\n\n## 7. `pyramide(hauteur)`\n\nRenvoie un tableau de chaînes formant une pyramide d'étoiles centrée.\n\n```js\npyramide(3)\n// [\"  *  \",\n//  \" *** \",\n//  \"*****\"]\n```\n\nChaque ligne a la même longueur : `hauteur * 2 - 1`.\n\n## Corriger\n\n```\njs 02-08\n```\n","depart":"\n// Exercice 02-08 · Boucles\n\nexport function fizzbuzz(n) {\n  // TODO\n}\n\nexport function sommePairs(n) {\n  // TODO\n}\n\nexport function tableMultiplication(n) {\n  // TODO\n}\n\nexport function inverser(chaine) {\n  // TODO : avec une boucle\n}\n\nexport function estPremier(n) {\n  // TODO\n}\n\nexport function chercherPremierNegatif(nombres) {\n  // TODO : utilise break\n}\n\nexport function pyramide(hauteur) {\n  // TODO\n}\n","tests":"\nimport { test, groupe, verifier } from \"../../moteur/verif.mjs\";\nimport * as ex from \"./exercice.mjs\";\n\ngroupe(\"fizzbuzz\", () => {\n  test(\"cas de l'énoncé\", () => {\n    verifier(ex.fizzbuzz(5)).vaut([1, 2, \"Fizz\", 4, \"Buzz\"]);\n  });\n  test(\"le multiple de 15 donne FizzBuzz\", () => {\n    verifier(ex.fizzbuzz(15).at(-1)).vaut(\"FizzBuzz\", \"teste 15 AVANT 3 et 5\");\n  });\n  test(\"longueur correcte\", () => verifier(ex.fizzbuzz(20)).aPourLongueur(20));\n  test(\"les non-multiples restent des nombres\", () => {\n    verifier(ex.fizzbuzz(4).at(0)).estDuType(\"number\", \"1 doit rester le nombre 1, pas \\\"1\\\"\");\n  });\n  test(\"n = 0 donne un tableau vide\", () => verifier(ex.fizzbuzz(0)).aPourLongueur(0));\n});\n\ngroupe(\"sommePairs\", () => {\n  test(\"jusqu'à 10\", () => verifier(ex.sommePairs(10)).vaut(30));\n  test(\"borne impaire\", () => verifier(ex.sommePairs(9)).vaut(20));\n  test(\"petites valeurs\", () => {\n    verifier(ex.sommePairs(1)).vaut(0);\n    verifier(ex.sommePairs(2)).vaut(2);\n  });\n});\n\ngroupe(\"tableMultiplication\", () => {\n  test(\"10 lignes\", () => verifier(ex.tableMultiplication(3)).aPourLongueur(10));\n  test(\"format exact\", () => {\n    const t = ex.tableMultiplication(3);\n    verifier(t.at(0)).vaut(\"3 x 1 = 3\");\n    verifier(t.at(9)).vaut(\"3 x 10 = 30\");\n  });\n});\n\ngroupe(\"inverser\", () => {\n  test(\"mot simple\", () => verifier(ex.inverser(\"bonjour\")).vaut(\"ruojnob\"));\n  test(\"chaîne vide\", () => verifier(ex.inverser(\"\")).vaut(\"\"));\n  test(\"un caractère\", () => verifier(ex.inverser(\"a\")).vaut(\"a\"));\n  test(\"palindrome\", () => verifier(ex.inverser(\"kayak\")).vaut(\"kayak\"));\n});\n\ngroupe(\"estPremier\", () => {\n  test(\"premiers\", () => {\n    for (const n of [2, 3, 5, 7, 11, 13, 97]) {\n      if (!ex.estPremier(n)) throw new Error(n + \" est premier\");\n    }\n  });\n  test(\"non premiers\", () => {\n    for (const n of [4, 9, 15, 100]) {\n      if (ex.estPremier(n)) throw new Error(n + \" n'est pas premier\");\n    }\n  });\n  test(\"cas limites\", () => {\n    verifier(ex.estPremier(1)).estFaux(\"1 n'est pas premier\");\n    verifier(ex.estPremier(0)).estFaux();\n    verifier(ex.estPremier(-7)).estFaux();\n    verifier(ex.estPremier(2)).estVrai(\"2 est le premier nombre premier\");\n  });\n});\n\ngroupe(\"chercherPremierNegatif\", () => {\n  test(\"trouve le premier\", () => {\n    verifier(ex.chercherPremierNegatif([3, 7, -2, -9])).vaut(-2);\n  });\n  test(\"aucun négatif\", () => verifier(ex.chercherPremierNegatif([1, 2])).vaut(null));\n  test(\"tableau vide\", () => verifier(ex.chercherPremierNegatif([])).vaut(null));\n  test(\"zéro n'est pas négatif\", () => verifier(ex.chercherPremierNegatif([0, -1])).vaut(-1));\n});\n\ngroupe(\"pyramide\", () => {\n  test(\"hauteur 3\", () => {\n    verifier(ex.pyramide(3)).vaut([\"  *  \", \" *** \", \"*****\"]);\n  });\n  test(\"hauteur 1\", () => verifier(ex.pyramide(1)).vaut([\"*\"]));\n  test(\"toutes les lignes ont la même longueur\", () => {\n    const p = ex.pyramide(5);\n    for (const l of p) verifier(l).aPourLongueur(9);\n  });\n});\n","solution":"export function fizzbuzz(n) {\n  const resultat = [];\n  for (let i = 1; i <= n; i++) {\n    if (i % 15 === 0) resultat.push(\"FizzBuzz\");        // 15 en premier !\n    else if (i % 3 === 0) resultat.push(\"Fizz\");\n    else if (i % 5 === 0) resultat.push(\"Buzz\");\n    else resultat.push(i);\n  }\n  return resultat;\n}\n\nexport function sommePairs(n) {\n  let total = 0;\n  for (let i = 1; i <= n; i++) {\n    if (i % 2 === 0) total += i;\n  }\n  return total;\n}\n\nexport function tableMultiplication(n) {\n  const lignes = [];\n  for (let i = 1; i <= 10; i++) {\n    lignes.push(`${n} x ${i} = ${n * i}`);\n  }\n  return lignes;\n}\n\nexport function inverser(chaine) {\n  let resultat = \"\";\n  for (let i = chaine.length - 1; i >= 0; i--) {\n    resultat += chaine[i];\n  }\n  return resultat;\n}\n\nexport function estPremier(n) {\n  if (!Number.isInteger(n) || n < 2) return false;\n  for (let d = 2; d * d <= n; d++) {      // s'arrête à la racine carrée\n    if (n % d === 0) return false;\n  }\n  return true;\n}\n\nexport function chercherPremierNegatif(nombres) {\n  let trouve = null;\n  for (const n of nombres) {\n    if (n < 0) {\n      trouve = n;\n      break;                              // inutile de continuer\n    }\n  }\n  return trouve;\n}\n\nexport function pyramide(hauteur) {\n  const largeur = hauteur * 2 - 1;\n  const lignes = [];\n  for (let i = 1; i <= hauteur; i++) {\n    const etoiles = i * 2 - 1;\n    const espaces = (largeur - etoiles) / 2;\n    lignes.push(\" \".repeat(espaces) + \"*\".repeat(etoiles) + \" \".repeat(espaces));\n  }\n  return lignes;\n}"},{"code":"02-09","titre":"Projet : quiz en console","min":120,"pret":true,"lecon":"\n# 02-09 · Projet : quiz en console\n\n**2 h · après 02-08 · premier vrai projet**\n\nCe module ne t'apprend pas de nouvelle notion. Il te fait assembler tout le chapitre 2 dans un programme complet : variables, chaînes, nombres, conditions, boucles.\n\n## Ce que tu construis\n\nUn moteur de quiz. Deux parties :\n\n1. **La logique** (testée automatiquement) : une fonction `creerQuiz` qui gère les questions, les réponses, le score.\n2. **L'interface console** (libre) : un vrai jeu jouable dans le terminal, qui utilise ta logique.\n\nCette séparation entre **logique** et **interface** est un des principes les plus importants du métier. La logique ne sait pas qu'elle est affichée dans un terminal ; demain tu brancheras la même logique sur une page web sans y toucher une ligne.\n\n## Le motif « objet avec état »\n\nTu n'as pas encore vu les classes. Pas besoin : une fonction qui renvoie un objet de fonctions suffit, et c'est même le style le plus courant en JavaScript moderne.\n\n```js\nfunction creerCompteur() {\n  let valeur = 0;                       // l'état, invisible de l'extérieur\n\n  return {\n    incrementer() { valeur++; return valeur; },\n    valeur() { return valeur; }\n  };\n}\n\nconst c = creerCompteur();\nc.incrementer();      // 1\nc.valeur();           // 1\nc.valeur = 999;       // ne casse rien : l'état interne est protégé\n```\n\nL'état vit dans la fonction, les méthodes renvoyées y accèdent. C'est une **closure**, que tu étudieras formellement en 03-06. Tu l'utilises déjà.\n\n## Lire une saisie dans le terminal\n\nNode fournit un module intégré. Pour la partie interface :\n\n```js\nimport readline from \"node:readline/promises\";\n\nconst rl = readline.createInterface({ input: process.stdin, output: process.stdout });\nconst reponse = await rl.question(\"Ta réponse ? \");\nconsole.log(\"Tu as répondu :\", reponse);\nrl.close();\n```\n\nLe `await` fonctionne directement au niveau supérieur d'un fichier `.mjs`. Tu comprendras pourquoi en section 08 ; pour l'instant, retiens la formule.\n\n## Conseils de méthode\n\n- **Écris la logique d'abord**, fais passer les tests, et seulement ensuite l'interface. C'est l'ordre naturel : on ne décore pas une maison sans murs.\n- Une fonction = une responsabilité. Si une fonction fait plus de 15 lignes, elle en fait probablement deux.\n- Commite après chaque fonction qui passe ses tests.\n\n## À retenir\n\n- Une fonction qui renvoie un objet de méthodes = de l'état encapsulé, sans classe.\n- Sépare toujours la logique de l'affichage.\n- La logique se teste, l'interface se voit. Les deux se développent séparément.\n","dossier":"02-09-projet-quiz-en-console","enonce":"\n# Exercice 02-09 · Projet quiz\n\n## Partie testée : `creerQuiz(questions)`\n\n`questions` est un tableau d'objets :\n\n```js\n[\n  { enonce: \"Capitale de la France ?\", reponse: \"paris\", points: 1 },\n  { enonce: \"2 + 2 ?\", reponse: \"4\", points: 2 }\n]\n```\n\n`creerQuiz` renvoie un objet avec exactement ces méthodes :\n\n### `questionCourante()`\nL'objet question en cours, ou `null` si le quiz est terminé.\n\n### `repondre(saisie)`\nCompare la saisie à la réponse attendue, **sans tenir compte de la casse ni des espaces autour**. Puis avance à la question suivante.\n\nRenvoie `{ correct, attendu, points }` :\n- `correct` : booléen\n- `attendu` : la réponse attendue\n- `points` : points gagnés sur cette question (0 si faux)\n\nSi le quiz est déjà terminé, renvoie `null` sans rien modifier.\n\n### `score()`\n`{ points, maximum, bonnes, total }`.\n\n### `termine()`\n`true` quand toutes les questions ont été posées.\n\n### `bilan()`\nUne chaîne selon le pourcentage de points obtenus :\n\n| Pourcentage | Bilan |\n|---|---|\n| 100 | `\"parfait\"` |\n| ≥ 75 | `\"très bien\"` |\n| ≥ 50 | `\"correct\"` |\n| ≥ 25 | `\"à revoir\"` |\n| < 25 | `\"il faut relire la leçon\"` |\n\nUn quiz sans question renvoie `\"il faut relire la leçon\"` et un score de 0.\n\n### `progression()`\nChaîne `\"2/5\"` : nombre de questions déjà posées sur le total.\n\n## Partie libre : le jeu\n\nCrée un fichier `jeu.mjs` **dans le même dossier**, qui importe `creerQuiz` et propose une vraie partie dans le terminal : affichage de la question, saisie, correction immédiate, score final et bilan.\n\n```\nnode jeu.mjs\n```\n\nCette partie n'est pas testée automatiquement — je la relirai au bilan hebdomadaire.\n\n## Corriger\n\n```\njs 02-09\n```\n","depart":"\n// Exercice 02-09 · Projet quiz — la logique\n// L'interface va dans un fichier jeu.mjs séparé.\n\nexport function creerQuiz(questions) {\n  // TODO : déclare ici l'état (index courant, points, bonnes réponses)\n\n  return {\n    questionCourante() {\n      // TODO\n    },\n    repondre(saisie) {\n      // TODO : { correct, attendu, points } ou null si terminé\n    },\n    score() {\n      // TODO : { points, maximum, bonnes, total }\n    },\n    termine() {\n      // TODO\n    },\n    bilan() {\n      // TODO\n    },\n    progression() {\n      // TODO : \"2/5\"\n    }\n  };\n}\n","tests":"\nimport { test, groupe, verifier } from \"../../moteur/verif.mjs\";\nimport { creerQuiz } from \"./exercice.mjs\";\n\nconst QUESTIONS = [\n  { enonce: \"Capitale de la France ?\", reponse: \"paris\", points: 1 },\n  { enonce: \"2 + 2 ?\", reponse: \"4\", points: 2 },\n  { enonce: \"Type de []\", reponse: \"object\", points: 1 }\n];\nconst neuf = () => creerQuiz(QUESTIONS.map(q => ({ ...q })));\n\ngroupe(\"structure\", () => {\n  test(\"creerQuiz est exportée\", () => verifier(creerQuiz).estUneFonction());\n  test(\"toutes les méthodes existent\", () => {\n    const q = neuf();\n    for (const m of [\"questionCourante\", \"repondre\", \"score\", \"termine\", \"bilan\", \"progression\"]) {\n      verifier(q[m]).estUneFonction(\"méthode manquante : \" + m);\n    }\n  });\n});\n\ngroupe(\"questionCourante\", () => {\n  test(\"commence à la première\", () => {\n    verifier(neuf().questionCourante().enonce).vaut(\"Capitale de la France ?\");\n  });\n  test(\"avance après une réponse\", () => {\n    const q = neuf();\n    q.repondre(\"paris\");\n    verifier(q.questionCourante().enonce).vaut(\"2 + 2 ?\");\n  });\n  test(\"null à la fin\", () => {\n    const q = neuf();\n    q.repondre(\"a\"); q.repondre(\"b\"); q.repondre(\"c\");\n    verifier(q.questionCourante()).vaut(null);\n  });\n});\n\ngroupe(\"repondre\", () => {\n  test(\"bonne réponse\", () => {\n    verifier(neuf().repondre(\"paris\")).vaut({ correct: true, attendu: \"paris\", points: 1 });\n  });\n  test(\"mauvaise réponse : 0 point\", () => {\n    verifier(neuf().repondre(\"lyon\")).vaut({ correct: false, attendu: \"paris\", points: 0 });\n  });\n  test(\"insensible à la casse\", () => {\n    verifier(neuf().repondre(\"PARIS\").correct).estVrai();\n    verifier(neuf().repondre(\"Paris\").correct).estVrai();\n  });\n  test(\"ignore les espaces autour\", () => {\n    verifier(neuf().repondre(\"  paris  \").correct).estVrai();\n  });\n  test(\"renvoie les points de la question\", () => {\n    const q = neuf();\n    q.repondre(\"paris\");\n    verifier(q.repondre(\"4\").points).vaut(2);\n  });\n  test(\"null quand le quiz est terminé\", () => {\n    const q = neuf();\n    q.repondre(\"a\"); q.repondre(\"b\"); q.repondre(\"c\");\n    verifier(q.repondre(\"d\")).vaut(null, \"ne doit rien modifier après la fin\");\n  });\n});\n\ngroupe(\"score\", () => {\n  test(\"score initial\", () => {\n    verifier(neuf().score()).vaut({ points: 0, maximum: 4, bonnes: 0, total: 3 });\n  });\n  test(\"cumule les points\", () => {\n    const q = neuf();\n    q.repondre(\"paris\");   // +1\n    q.repondre(\"4\");       // +2\n    q.repondre(\"faux\");    // +0\n    verifier(q.score()).vaut({ points: 3, maximum: 4, bonnes: 2, total: 3 });\n  });\n  test(\"sans faute\", () => {\n    const q = neuf();\n    q.repondre(\"paris\"); q.repondre(\"4\"); q.repondre(\"object\");\n    verifier(q.score().points).vaut(4);\n    verifier(q.score().bonnes).vaut(3);\n  });\n});\n\ngroupe(\"termine et progression\", () => {\n  test(\"termine passe à true à la fin\", () => {\n    const q = neuf();\n    verifier(q.termine()).estFaux();\n    q.repondre(\"a\"); q.repondre(\"b\");\n    verifier(q.termine()).estFaux();\n    q.repondre(\"c\");\n    verifier(q.termine()).estVrai();\n  });\n  test(\"progression\", () => {\n    const q = neuf();\n    verifier(q.progression()).vaut(\"0/3\");\n    q.repondre(\"paris\");\n    verifier(q.progression()).vaut(\"1/3\");\n    q.repondre(\"x\"); q.repondre(\"y\");\n    verifier(q.progression()).vaut(\"3/3\");\n  });\n});\n\ngroupe(\"bilan\", () => {\n  const jouer = reponses => {\n    const q = neuf();\n    for (const r of reponses) q.repondre(r);\n    return q.bilan();\n  };\n  test(\"parfait\", () => verifier(jouer([\"paris\", \"4\", \"object\"])).vaut(\"parfait\"));\n  test(\"très bien : 3 points sur 4\", () => verifier(jouer([\"paris\", \"4\", \"faux\"])).vaut(\"très bien\"));\n  test(\"correct : 2 points sur 4\", () => verifier(jouer([\"faux\", \"4\", \"faux\"])).vaut(\"correct\"));\n  test(\"à revoir : 1 point sur 4\", () => verifier(jouer([\"paris\", \"faux\", \"faux\"])).vaut(\"à revoir\"));\n  test(\"zéro\", () => verifier(jouer([\"a\", \"b\", \"c\"])).vaut(\"il faut relire la leçon\"));\n});\n\ngroupe(\"cas limite : quiz vide\", () => {\n  test(\"ne plante pas\", () => {\n    const q = creerQuiz([]);\n    verifier(() => q.bilan()).neLevePasDErreur(\"attention à la division par zéro\");\n    verifier(q.termine()).estVrai();\n    verifier(q.questionCourante()).vaut(null);\n    verifier(q.score()).vaut({ points: 0, maximum: 0, bonnes: 0, total: 0 });\n    verifier(q.bilan()).vaut(\"il faut relire la leçon\");\n  });\n});\n\ngroupe(\"isolement\", () => {\n  test(\"deux quiz sont indépendants\", () => {\n    const a = neuf(), b = neuf();\n    a.repondre(\"paris\"); a.repondre(\"4\");\n    verifier(b.score().points).vaut(0, \"chaque quiz doit avoir son propre état\");\n    verifier(b.progression()).vaut(\"0/3\");\n  });\n});\n","solution":"export function creerQuiz(questions) {\n  let index = 0;\n  let points = 0;\n  let bonnes = 0;\n\n  const maximum = questions.reduce((total, q) => total + q.points, 0);\n\n  const normaliser = valeur => String(valeur).trim().toLowerCase();\n\n  return {\n    questionCourante() {\n      return questions[index] ?? null;\n    },\n\n    repondre(saisie) {\n      const question = questions[index];\n      if (!question) return null;               // quiz déjà terminé\n\n      const correct = normaliser(saisie) === normaliser(question.reponse);\n      const gagnes = correct ? question.points : 0;\n\n      if (correct) {\n        points += gagnes;\n        bonnes++;\n      }\n      index++;\n\n      return { correct, attendu: question.reponse, points: gagnes };\n    },\n\n    score() {\n      return { points, maximum, bonnes, total: questions.length };\n    },\n\n    termine() {\n      return index >= questions.length;\n    },\n\n    bilan() {\n      if (maximum === 0) return \"il faut relire la leçon\";   // évite la division par zéro\n      const pct = (points / maximum) * 100;\n      if (pct === 100) return \"parfait\";\n      if (pct >= 75) return \"très bien\";\n      if (pct >= 50) return \"correct\";\n      if (pct >= 25) return \"à revoir\";\n      return \"il faut relire la leçon\";\n    },\n\n    progression() {\n      return `${index}/${questions.length}`;\n    }\n  };\n}"}]},{"num":"03","titre":"Fonctions","intro":"Découper, nommer, réutiliser. Et les concepts qui font la différence en entretien.","modules":[{"code":"03-01","titre":"Déclarer et appeler","min":30,"pret":false,"lecon":null},{"code":"03-02","titre":"Fonctions fléchées","min":30,"pret":false,"lecon":null},{"code":"03-03","titre":"Portée et hoisting","min":45,"pret":false,"lecon":null},{"code":"03-04","titre":"Paramètres avancés","min":30,"pret":false,"lecon":null},{"code":"03-05","titre":"Fonctions d'ordre supérieur","min":45,"pret":false,"lecon":null},{"code":"03-06","titre":"Closures","min":60,"pret":false,"lecon":null},{"code":"03-07","titre":"Récursivité","min":45,"pret":false,"lecon":null}]},{"num":"04","titre":"Tableaux et objets","intro":"Les deux structures que tu manipuleras 100 fois par jour. Et le piège de la référence.","modules":[{"code":"04-01","titre":"Tableaux : les bases","min":45,"pret":false,"lecon":null},{"code":"04-02","titre":"Objets : les bases","min":45,"pret":false,"lecon":null},{"code":"04-03","titre":"Parcourir un objet","min":30,"pret":false,"lecon":null},{"code":"04-04","titre":"Référence contre copie","min":45,"pret":false,"lecon":null},{"code":"04-05","titre":"Destructuring","min":45,"pret":false,"lecon":null},{"code":"04-06","titre":"Spread et rest","min":30,"pret":false,"lecon":null},{"code":"04-07","titre":"this et méthodes d'objet","min":45,"pret":false,"lecon":null},{"code":"04-08","titre":"Map et Set","min":30,"pret":false,"lecon":null},{"code":"04-09","titre":"JSON","min":30,"pret":false,"lecon":null}]},{"num":"05","titre":"Méthodes de tableaux modernes","intro":"map, filter, reduce. C'est ici que ton code commence à ressembler à du JS professionnel.","modules":[{"code":"05-01","titre":"forEach","min":15,"pret":false,"lecon":null},{"code":"05-02","titre":"map","min":45,"pret":false,"lecon":null},{"code":"05-03","titre":"filter","min":30,"pret":false,"lecon":null},{"code":"05-04","titre":"reduce","min":60,"pret":false,"lecon":null},{"code":"05-05","titre":"find, some, every","min":30,"pret":false,"lecon":null},{"code":"05-06","titre":"sort","min":45,"pret":false,"lecon":null},{"code":"05-07","titre":"Chaîner les méthodes","min":45,"pret":false,"lecon":null},{"code":"05-08","titre":"Projet : tableau de bord de données","min":120,"pret":false,"lecon":null}]},{"num":"06","titre":"Le DOM","intro":"Faire bouger une page. Le premier moment où ton code devient visible.","modules":[{"code":"06-01","titre":"Comprendre le DOM","min":30,"pret":false,"lecon":null},{"code":"06-02","titre":"Sélectionner des éléments","min":30,"pret":false,"lecon":null},{"code":"06-03","titre":"Modifier contenu et style","min":45,"pret":false,"lecon":null},{"code":"06-04","titre":"Créer et supprimer des éléments","min":45,"pret":false,"lecon":null},{"code":"06-05","titre":"Événements","min":60,"pret":false,"lecon":null},{"code":"06-06","titre":"Formulaires","min":60,"pret":false,"lecon":null},{"code":"06-07","titre":"Projet : liste de tâches","min":240,"pret":false,"lecon":null}]},{"num":"07","titre":"JavaScript moderne","intro":"Les briques que React suppose déjà acquises.","modules":[{"code":"07-01","titre":"Modules ES","min":45,"pret":false,"lecon":null},{"code":"07-02","titre":"Chaînage optionnel et nullish","min":30,"pret":false,"lecon":null},{"code":"07-03","titre":"Classes","min":60,"pret":false,"lecon":null},{"code":"07-04","titre":"Prototypes","min":45,"pret":false,"lecon":null},{"code":"07-05","titre":"Immutabilité en pratique","min":45,"pret":false,"lecon":null},{"code":"07-06","titre":"npm et package.json","min":45,"pret":false,"lecon":null},{"code":"07-07","titre":"Vite","min":45,"pret":false,"lecon":null}]},{"num":"08","titre":"Asynchrone","intro":"Attendre sans bloquer. Le chapitre qui sépare les débutants des juniors.","modules":[{"code":"08-01","titre":"Synchrone contre asynchrone","min":30,"pret":false,"lecon":null},{"code":"08-02","titre":"Callbacks","min":30,"pret":false,"lecon":null},{"code":"08-03","titre":"Promesses","min":60,"pret":false,"lecon":null},{"code":"08-04","titre":"async / await","min":60,"pret":false,"lecon":null},{"code":"08-05","titre":"fetch et les API","min":60,"pret":false,"lecon":null},{"code":"08-06","titre":"Chargement et erreurs","min":60,"pret":false,"lecon":null},{"code":"08-07","titre":"Promise.all et compagnie","min":45,"pret":false,"lecon":null},{"code":"08-08","titre":"POST, PUT, DELETE","min":45,"pret":false,"lecon":null},{"code":"08-09","titre":"Projet : app connectée à une API","min":240,"pret":false,"lecon":null}]},{"num":"09","titre":"Qualité et derniers réflexes","intro":"Déboguer, tester, écrire lisible. Puis le feu vert pour React.","modules":[{"code":"09-01","titre":"Débogage au debugger","min":45,"pret":false,"lecon":null},{"code":"09-02","titre":"Gestion des erreurs","min":30,"pret":false,"lecon":null},{"code":"09-03","titre":"Écrire du code lisible","min":45,"pret":false,"lecon":null},{"code":"09-04","titre":"Premiers tests","min":60,"pret":false,"lecon":null},{"code":"09-05","titre":"Relecture générale","min":120,"pret":false,"lecon":null},{"code":"09-06","titre":"Feu vert pour React","min":15,"pret":false,"lecon":null}]}],"verif":"// Mini-framework de test, zéro dépendance.\n// Les fichiers tests.mjs de chaque exercice l'utilisent.\n\nconst cas = [];\nlet groupeCourant = null;\n\n/** Regroupe des tests sous un titre. */\nexport function groupe(titre, fn) {\n  const prec = groupeCourant;\n  groupeCourant = titre;\n  fn();\n  groupeCourant = prec;\n}\n\n/** Déclare un test. `fn` peut être asynchrone. */\nexport function test(titre, fn) {\n  cas.push({ titre, fn, groupe: groupeCourant });\n}\n\nclass EchecAssertion extends Error {\n  constructor(message, attendu, obtenu) {\n    super(message);\n    this.name = \"EchecAssertion\";\n    this.attendu = attendu;\n    this.obtenu = obtenu;\n    this.aDetail = arguments.length > 1;\n  }\n}\n\nconst rendre = v => {\n  if (typeof v === \"string\") return JSON.stringify(v);\n  if (typeof v === \"function\") return \"[fonction \" + (v.name || \"anonyme\") + \"]\";\n  if (v === undefined) return \"undefined\";\n  if (typeof v === \"bigint\") return v + \"n\";\n  if (v instanceof Map) return \"Map(\" + JSON.stringify([...v.entries()]) + \")\";\n  if (v instanceof Set) return \"Set(\" + JSON.stringify([...v]) + \")\";\n  try { return JSON.stringify(v); } catch { return String(v); }\n};\n\nconst memeValeur = (a, b) => {\n  if (Object.is(a, b)) return true;\n  if (typeof a !== typeof b) return false;\n  if (a === null || b === null || typeof a !== \"object\") return false;\n  if (Array.isArray(a) !== Array.isArray(b)) return false;\n  const ca = Object.keys(a), cb = Object.keys(b);\n  if (ca.length !== cb.length) return false;\n  return ca.every(k => cb.includes(k) && memeValeur(a[k], b[k]));\n};\n\nexport function verifier(obtenu) {\n  return {\n    /** Égalité stricte, ou structurelle pour objets et tableaux. */\n    vaut(attendu, note) {\n      if (!memeValeur(obtenu, attendu))\n        throw new EchecAssertion(note || \"valeur incorrecte\", rendre(attendu), rendre(obtenu));\n      return this;\n    },\n    estVrai(note) {\n      if (obtenu !== true) throw new EchecAssertion(note || \"devrait valoir true\", \"true\", rendre(obtenu));\n      return this;\n    },\n    estFaux(note) {\n      if (obtenu !== false) throw new EchecAssertion(note || \"devrait valoir false\", \"false\", rendre(obtenu));\n      return this;\n    },\n    estDuType(t, note) {\n      if (typeof obtenu !== t)\n        throw new EchecAssertion(note || \"mauvais type\", \"typeof === \" + JSON.stringify(t), \"typeof === \" + JSON.stringify(typeof obtenu));\n      return this;\n    },\n    estUneFonction(note) {\n      if (typeof obtenu !== \"function\")\n        throw new EchecAssertion(note || \"une fonction est attendue ici\", \"une fonction\", rendre(obtenu));\n      return this;\n    },\n    contient(morceau, note) {\n      const ok = typeof obtenu === \"string\"\n        ? obtenu.includes(morceau)\n        : Array.isArray(obtenu) && obtenu.some(x => memeValeur(x, morceau));\n      if (!ok) throw new EchecAssertion(note || \"élément absent\", \"contient \" + rendre(morceau), rendre(obtenu));\n      return this;\n    },\n    aPourLongueur(n, note) {\n      const l = obtenu?.length;\n      if (l !== n) throw new EchecAssertion(note || \"mauvaise longueur\", \"longueur \" + n, \"longueur \" + rendre(l));\n      return this;\n    },\n    /** Vérifie qu'appeler la fonction lève une erreur. */\n    leveUneErreur(note) {\n      let leve = false;\n      try { obtenu(); } catch { leve = true; }\n      if (!leve) throw new EchecAssertion(note || \"une erreur était attendue\", \"une erreur levée\", \"aucune erreur\");\n      return this;\n    },\n    /** Vérifie qu'appeler la fonction ne lève PAS d'erreur. */\n    neLevePasDErreur(note) {\n      try { obtenu(); } catch (e) {\n        throw new EchecAssertion(note || \"ne devrait pas planter\", \"aucune erreur\", e.name + \" : \" + e.message);\n      }\n      return this;\n    },\n    /** Nombre à tolérance, pour les calculs flottants. */\n    vautEnviron(attendu, tolerance = 0.001, note) {\n      if (typeof obtenu !== \"number\" || Math.abs(obtenu - attendu) > tolerance)\n        throw new EchecAssertion(note || \"valeur numérique incorrecte\", \"≈ \" + attendu, rendre(obtenu));\n      return this;\n    }\n  };\n}\n\n/** Levée explicite depuis un test. */\nexport function echouer(message) {\n  throw new EchecAssertion(message);\n}\n\n/** Exécute tous les tests déclarés. Renvoie { total, reussis, echecs: [...] } */\nexport async function executer() {\n  const echecs = [];\n  let reussis = 0;\n  for (const c of cas) {\n    try {\n      await c.fn();\n      reussis++;\n      c.ok = true;\n    } catch (e) {\n      c.ok = false;\n      c.erreur = e;\n      echecs.push(c);\n    }\n  }\n  return { total: cas.length, reussis, echecs, cas };\n}\n\nexport { cas as _cas };\n"}</script>
+<script>
+"use strict";
+const DATA = JSON.parse(document.getElementById("donnees").textContent);
+const CLE = "formation-js-v1";
+
+/* =========================================================
+   1. ÉTAT
+   ========================================================= */
+const vide = () => ({ version:1, creeLe:new Date().toISOString(), modules:{}, journal:[], code:{} });
+let etat = vide();
+try {
+  const brut = localStorage.getItem(CLE);
+  if (brut) { const p = JSON.parse(brut); etat = Object.assign(vide(), p);
+    etat.modules ||= {}; etat.journal ||= []; etat.code ||= {}; }
+} catch (e) { console.warn("état illisible, remise à zéro", e); }
+
+const MODULES = DATA.sections.flatMap(s => s.modules.filter(m => m.pret));
+const parCode = Object.fromEntries(MODULES.map(m => [m.code, m]));
+const etatDe = c => etat.modules[c] || { etat:"a-faire", essais:0, echecs:0 };
+const estFait = c => etatDe(c).etat === "reussi";
+
+/** Index du premier module non réussi : seul lui et les précédents sont ouverts. */
+function frontiere() {
+  const i = MODULES.findIndex(m => !estFait(m.code));
+  return i === -1 ? MODULES.length - 1 : i;
+}
+const estOuvert = code => MODULES.findIndex(m => m.code === code) <= frontiere();
+
+function sauver() {
+  try { localStorage.setItem(CLE, JSON.stringify(etat)); }
+  catch (e) { console.warn("sauvegarde impossible", e); }
+  syncProgression();
+}
+
+/** Reproduit exactement la logique de moteur/progression.mjs. */
+function enregistrer(code, resultat, detail = {}) {
+  const now = new Date().toISOString();
+  const m = etat.modules[code] || { etat:"a-faire", essais:0, echecs:0,
+    premierEssai:null, reussiLe:null, dernierEssai:null };
+  m.essais++;
+  m.premierEssai ||= now;
+  m.dernierEssai = now;
+  if (resultat === "reussi") {
+    if (m.etat !== "reussi") m.reussiLe = now;
+    m.etat = "reussi";
+    m.essaisJusquAuSucces ??= m.essais;
+  } else { m.echecs++; m.etat = "en-cours"; }
+  etat.modules[code] = m;
+  etat.journal.push(Object.assign({ date:now, code, action:resultat, source:"web" }, detail));
+  if (etat.journal.length > 2000) etat.journal = etat.journal.slice(-2000);
+  sauver();
+  return m;
+}
+function validerManuellement(code) {
+  const now = new Date().toISOString();
+  const m = etat.modules[code] || { etat:"a-faire", essais:0, echecs:0 };
+  m.etat = "reussi"; m.reussiLe = now; m.valideALaMain = true;
+  etat.modules[code] = m;
+  etat.journal.push({ date:now, code, action:"valide-main", source:"web" });
+  sauver();
+}
+
+/* =========================================================
+   2. COLORATION SYNTAXIQUE + MARKDOWN
+   ========================================================= */
+const ech = s => s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+const KW = new Set(("const let var function return if else for of in while do switch case default "+
+  "break continue new typeof instanceof null undefined true false this class extends super try "+
+  "catch finally throw async await export import from yield delete void NaN Infinity").split(" "));
+
+function surligner(src) {
+  let out = "", i = 0; const n = src.length;
+  const est = (c,re) => c !== undefined && re.test(c);
+  while (i < n) {
+    const c = src[i], d = src[i+1];
+    if (c === "/" && d === "/") { let j = src.indexOf("\n", i); if (j < 0) j = n;
+      out += '<span class="j-com">'+ech(src.slice(i,j))+"</span>"; i = j; continue; }
+    if (c === "/" && d === "*") { let j = src.indexOf("*/", i); j = j < 0 ? n : j+2;
+      out += '<span class="j-com">'+ech(src.slice(i,j))+"</span>"; i = j; continue; }
+    if (c === '"' || c === "'" || c === "`") {
+      let j = i+1;
+      while (j < n) { if (src[j] === "\\") { j += 2; continue; }
+        if (src[j] === c) { j++; break; }
+        if (c !== "`" && src[j] === "\n") break;
+        j++; }
+      out += '<span class="j-str">'+ech(src.slice(i,j))+"</span>"; i = j; continue;
+    }
+    if (est(c,/[0-9]/) && !est(src[i-1],/[\w$]/)) {
+      let j = i; while (j < n && /[0-9a-fA-FxXeE._+\-]/.test(src[j]) &&
+        !(/[+\-]/.test(src[j]) && !/[eE]/.test(src[j-1]))) j++;
+      out += '<span class="j-num">'+ech(src.slice(i,j))+"</span>"; i = j; continue;
+    }
+    if (est(c,/[A-Za-z_$]/)) {
+      let j = i; while (j < n && /[\w$]/.test(src[j])) j++;
+      const mot = src.slice(i,j);
+      let k = j; while (k < n && /\s/.test(src[k])) k++;
+      const cls = KW.has(mot) ? "j-kw" : (src[k] === "(" ? "j-fn" : null);
+      out += cls ? '<span class="'+cls+'">'+ech(mot)+"</span>" : ech(mot);
+      i = j; continue;
+    }
+    if (est(c,/[{}()\[\];,.:=+\-*/%<>!&|?~^]/)) {
+      out += '<span class="j-pon">'+ech(c)+"</span>"; i++; continue;
+    }
+    out += ech(c); i++;
+  }
+  return out;
+}
+
+function enligne(t) {
+  return t
+    .replace(/`([^`]+)`/g, (m,c) => "<code>"+c+"</code>")
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+    .replace(/(^|[\s(])\*([^*\n]+)\*/g, "$1<em>$2</em>")
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+}
+
+function md(src) {
+  if (!src) return "";
+  const blocs = [];
+  src = src.replace(/```(\w*)\r?\n([\s\S]*?)```/g, (m, lang, code) => {
+    blocs.push('<pre><code>'+surligner(code.replace(/\n$/,""))+"</code></pre>");
+    return " B"+(blocs.length-1)+" ";
+  });
+  const lignes = ech(src).split(/\r?\n/);
+  const html = []; let i = 0;
+  while (i < lignes.length) {
+    let L = lignes[i];
+    if (/^ B\d+ $/.test(L.trim())) { html.push(L.trim()); i++; continue; }
+    if (!L.trim()) { i++; continue; }
+    if (/^(-{3,}|\*{3,})\s*$/.test(L)) { html.push("<hr>"); i++; continue; }
+    let h = L.match(/^(#{1,6})\s+(.*)$/);
+    if (h) { const n = h[1].length; html.push("<h"+n+">"+enligne(h[2])+"</h"+n+">"); i++; continue; }
+    if (/^\s*>\s?/.test(L)) {
+      const buf = [];
+      while (i < lignes.length && /^\s*>\s?/.test(lignes[i])) { buf.push(lignes[i].replace(/^\s*>\s?/,"")); i++; }
+      html.push("<blockquote>"+enligne(buf.join(" "))+"</blockquote>"); continue;
+    }
+    if (/^\s*\|.*\|\s*$/.test(L) && i+1 < lignes.length && /^\s*\|[\s:|-]+\|\s*$/.test(lignes[i+1])) {
+      const cell = r => r.trim().replace(/^\||\|$/g,"").split("|").map(c => enligne(c.trim()));
+      const tete = cell(lignes[i]); i += 2;
+      const corps = [];
+      while (i < lignes.length && /^\s*\|.*\|\s*$/.test(lignes[i])) { corps.push(cell(lignes[i])); i++; }
+      html.push("<table><thead><tr>"+tete.map(c => "<th>"+c+"</th>").join("")+
+        "</tr></thead><tbody>"+corps.map(r => "<tr>"+r.map(c => "<td>"+c+"</td>").join("")+"</tr>").join("")+
+        "</tbody></table>");
+      continue;
+    }
+    const puce = /^\s*[-*+]\s+/, num = /^\s*\d+[.)]\s+/;
+    if (puce.test(L) || num.test(L)) {
+      const ord = num.test(L), re = ord ? num : puce, buf = [];
+      while (i < lignes.length && re.test(lignes[i])) {
+        let t = lignes[i].replace(re,""); i++;
+        while (i < lignes.length && lignes[i].trim() && !re.test(lignes[i]) &&
+               !/^(#{1,6}\s|\s*\|| B)/.test(lignes[i])) { t += " "+lignes[i].trim(); i++; }
+        buf.push("<li>"+enligne(t)+"</li>");
+      }
+      html.push((ord?"<ol>":"<ul>")+buf.join("")+(ord?"</ol>":"</ul>")); continue;
+    }
+    const buf = [];
+    while (i < lignes.length && lignes[i].trim() && !/^(#{1,6}\s|\s*>|\s*[-*+]\s|\s*\d+[.)]\s|\s*\|| B|-{3,}\s*$)/.test(lignes[i])) {
+      buf.push(lignes[i]); i++;
+    }
+    if (buf.length) html.push("<p>"+enligne(buf.join(" "))+"</p>"); else i++;
+  }
+  return html.join("\n").replace(/ B(\d+) /g, (m,n) => blocs[+n]);
+}
+
+/* =========================================================
+   3. EXÉCUTION DU CODE (sans modules ES : compatible file://)
+   ========================================================= */
+/** Repère les positions hors chaînes/commentaires des mots-clés de boucle. */
+function positionsBoucles(src) {
+  const pos = []; let i = 0; const n = src.length;
+  while (i < n) {
+    const c = src[i], d = src[i+1];
+    if (c === "/" && d === "/") { let j = src.indexOf("\n", i); i = j < 0 ? n : j; continue; }
+    if (c === "/" && d === "*") { let j = src.indexOf("*/", i); i = j < 0 ? n : j+2; continue; }
+    if (c === '"' || c === "'" || c === "`") {
+      let j = i+1;
+      while (j < n) { if (src[j] === "\\") { j += 2; continue; } if (src[j] === c) { j++; break; } j++; }
+      i = j; continue;
+    }
+    if (/[A-Za-z_$]/.test(c)) {
+      let j = i; while (j < n && /[\w$]/.test(src[j])) j++;
+      const mot = src.slice(i,j);
+      if ((mot === "for" || mot === "while" || mot === "do") && src[i-1] !== ".") pos.push({ mot, i, j });
+      i = j; continue;
+    }
+    i++;
+  }
+  return pos;
+}
+function finParenthese(src, ouvre) {
+  let p = 0, i = ouvre, n = src.length;
+  while (i < n) {
+    const c = src[i];
+    if (c === '"' || c === "'" || c === "`") {
+      let j = i+1;
+      while (j < n) { if (src[j] === "\\") { j += 2; continue; } if (src[j] === c) { j++; break; } j++; }
+      i = j; continue;
+    }
+    if (c === "(") p++;
+    else if (c === ")") { p--; if (p === 0) return i+1; }
+    i++;
+  }
+  return -1;
+}
+/** Injecte `__tick();` en tête de chaque corps de boucle → coupe les boucles infinies. */
+function proteger(src) {
+  try {
+    const ins = [];
+    for (const b of positionsBoucles(src)) {
+      let k = b.j;
+      if (b.mot === "do") {
+        while (k < src.length && /\s/.test(src[k])) k++;
+        if (src[k] === "{") ins.push(k+1);
+        continue;
+      }
+      while (k < src.length && /\s/.test(src[k])) k++;
+      if (src[k] !== "(") continue;
+      const f = finParenthese(src, k);
+      if (f < 0) continue;
+      let m = f;
+      while (m < src.length && /\s/.test(src[m])) m++;
+      if (src[m] === "{") ins.push(m+1);
+    }
+    let out = src;
+    ins.sort((a,b) => b-a).forEach(p => { out = out.slice(0,p) + "__tick();" + out.slice(p); });
+    return out;
+  } catch (e) { return src; }
+}
+
+let _debut = 0;
+function __tick() {
+  if (Date.now() - _debut > 3000) { const e = new Error("BOUCLE_TROP_LONGUE"); e.boucle = true; throw e; }
+}
+
+function transformerExercice(src) {
+  const noms = [];
+  const add = n => { if (n && !noms.includes(n)) noms.push(n); };
+  src.replace(/\bexport\s+(?:async\s+)?function\s*\*?\s*([A-Za-z_$][\w$]*)/g, (m,n) => (add(n), m));
+  src.replace(/\bexport\s+(?:const|let|var)\s+([A-Za-z_$][\w$]*)/g, (m,n) => (add(n), m));
+  src.replace(/\bexport\s+class\s+([A-Za-z_$][\w$]*)/g, (m,n) => (add(n), m));
+  src.replace(/^[ \t]*export\s*\{([^}]*)\}/gm, (m,inner) => {
+    inner.split(",").forEach(p => { const t = p.split(/\s+as\s+/); add((t[0]||"").trim()); });
+    return m;
+  });
+  let code = src
+    .replace(/^[ \t]*export\s*\{[^}]*\}[ \t]*;?[ \t]*$/gm, "")
+    .replace(/^([ \t]*)export\s+(?=(?:async\s+)?(?:function|const|let|var|class)\b)/gm, "$1");
+  return { code, noms };
+}
+function transformerTests(src) {
+  return src
+    .replace(/^[ \t]*import\s+[^;\n]*?from\s+["'][^"']*verif\.mjs["'][ \t]*;?[ \t]*$/gm, "")
+    .replace(/^[ \t]*import\s+\*\s+as\s+([A-Za-z_$][\w$]*)\s+from\s+["']\.\/exercice\.mjs["'][ \t]*;?[ \t]*$/gm, "const $1 = __ex;")
+    .replace(/^[ \t]*import\s+\{([^}]*)\}\s+from\s+["']\.\/exercice\.mjs["'][ \t]*;?[ \t]*$/gm, "const {$1} = __ex;");
+}
+/** Instancie une copie neuve du mini-framework de test du moteur. */
+function creerVerif() {
+  const { code, noms } = transformerExercice(DATA.verif);
+  return new Function(code + "\n;return {" + noms.join(",") + "};")();
+}
+
+async function lancerTests(mod, source) {
+  const sortie = [];
+  const fmt = v => {
+    if (typeof v === "string") return v;
+    if (v === undefined) return "undefined";
+    try { return JSON.stringify(v); } catch { return String(v); }
+  };
+  const faux = {};
+  ["log","info","warn","error","debug"].forEach(k => faux[k] = (...a) => sortie.push(a.map(fmt).join(" ")));
+  faux.table = faux.log; faux.dir = faux.log;
+
+  _debut = Date.now();
+  let ex;
+  try {
+    const { code, noms } = transformerExercice(source);
+    if (!noms.length) return { fatale:"Aucune fonction exportée trouvée. Garde bien les mots-clés `export` du fichier de départ.", sortie };
+    const fab = new Function("console","__tick", proteger(code) + "\n;return {" + noms.join(",") + "};");
+    ex = fab(faux, __tick);
+  } catch (e) {
+    return { fatale: (e && e.boucle) ? "Boucle qui ne s'arrête jamais : ta condition ne devient jamais fausse."
+      : "Ton fichier ne s'exécute pas — " + (e.name || "Erreur") + " : " + e.message, sortie };
+  }
+
+  const v = creerVerif();
+  try {
+    new Function("test","groupe","verifier","echouer","__ex","console", transformerTests(mod.tests))
+      (v.test, v.groupe, v.verifier, v.echouer, ex, faux);
+  } catch (e) {
+    return { fatale:"Erreur au chargement des tests : " + e.message, sortie };
+  }
+
+  _debut = Date.now();
+  let r;
+  try { r = await v.executer(); }
+  catch (e) { return { fatale:"Exécution interrompue : " + e.message, sortie }; }
+  return { r, sortie };
+}
+
+/* =========================================================
+   4. SYNCHRONISATION AVEC LE DOSSIER (optionnelle)
+   ========================================================= */
+let racine = null;
+const idb = {
+  ouvrir: () => new Promise((ok,ko) => {
+    const q = indexedDB.open("formation-js", 1);
+    q.onupgradeneeded = () => q.result.createObjectStore("h");
+    q.onsuccess = () => ok(q.result); q.onerror = () => ko(q.error);
+  }),
+  async set(k,v){ const d = await this.ouvrir(); return new Promise(ok => {
+    const t = d.transaction("h","readwrite"); t.objectStore("h").put(v,k); t.oncomplete = ok; }); },
+  async get(k){ const d = await this.ouvrir(); return new Promise(ok => {
+    const t = d.transaction("h","readonly"); const q = t.objectStore("h").get(k);
+    q.onsuccess = () => ok(q.result); q.onerror = () => ok(null); }); }
+};
+const supporteFS = typeof window.showDirectoryPicker === "function";
+
+async function ecrireFichier(parts, contenu) {
+  if (!racine) return false;
+  try {
+    let d = racine;
+    for (const p of parts.slice(0,-1)) d = await d.getDirectoryHandle(p, { create:true });
+    const f = await d.getFileHandle(parts[parts.length-1], { create:true });
+    const w = await f.createWritable();
+    await w.write(contenu); await w.close();
+    return true;
+  } catch (e) { console.warn("écriture impossible", parts, e); return false; }
+}
+function progressionJson() {
+  const p = { version:1, creeLe: etat.creeLe, modules: etat.modules, journal: etat.journal };
+  return JSON.stringify(p, null, 2) + "\n";
+}
+let tSync = null;
+function syncProgression() {
+  if (!racine) return;
+  clearTimeout(tSync);
+  tSync = setTimeout(() => ecrireFichier(["progression.json"], progressionJson()), 400);
+}
+function syncCode(code) {
+  const mod = parCode[code];
+  if (!racine || !mod || !mod.dossier) return;
+  ecrireFichier(["exercices", mod.dossier, "exercice.mjs"], etat.code[code] ?? mod.depart);
+}
+async function connecter() {
+  if (!supporteFS) { modale("Non disponible",
+    "<p>Ton navigateur ne permet pas d'écrire directement dans un dossier. Utilise <b>Chrome</b> ou <b>Edge</b>, "+
+    "ou reste en mode navigateur et clique sur <b>Exporter progression.json</b> de temps en temps.</p>"); return; }
+  try {
+    racine = await window.showDirectoryPicker({ mode:"readwrite" });
+    await idb.set("racine", racine);
+    await apresConnexion();
+  } catch (e) { if (e && e.name !== "AbortError") modale("Échec", "<p>"+ech(String(e.message||e))+"</p>"); }
+}
+async function apresConnexion() {
+  // récupère un éventuel travail fait en ligne de commande
+  try {
+    const f = await racine.getFileHandle("progression.json");
+    const dist = JSON.parse(await (await f.getFile()).text());
+    if (dist && dist.modules) {
+      for (const [c,m] of Object.entries(dist.modules)) {
+        const loc = etat.modules[c];
+        if (!loc || (m.etat === "reussi" && loc.etat !== "reussi")) etat.modules[c] = m;
+      }
+      if ((dist.journal||[]).length > etat.journal.length) etat.journal = dist.journal;
+      etat.creeLe = dist.creeLe || etat.creeLe;
+    }
+  } catch (e) { /* fichier absent ou illisible : on garde l'état local */ }
+  for (const m of MODULES) if (m.dossier && etat.code[m.code]) await syncCode(m.code);
+  await ecrireFichier(["progression.json"], progressionJson());
+  majSync(); sauver(); dessiner();
+}
+function majSync() {
+  const el = document.getElementById("etat-sync");
+  el.innerHTML = racine
+    ? "Synchronisé avec <b>" + ech(racine.name) + "</b>"
+    : "Progression enregistrée dans ce navigateur";
+  document.getElementById("b-connecter").style.display = racine ? "none" : "";
+}
+(async () => {
+  if (!supporteFS) { document.getElementById("b-connecter").style.display = "none"; return; }
+  try {
+    const h = await idb.get("racine");
+    if (h && (await h.queryPermission({ mode:"readwrite" })) === "granted") { racine = h; await apresConnexion(); }
+  } catch (e) {}
+})();
+
+/* =========================================================
+   5. INTERFACE
+   ========================================================= */
+let courant = null, onglet = "lecon", editeur = null, dernierRes = null;
+
+function dessinerLat() {
+  const f = frontiere();
+  const l = document.getElementById("liste");
+  l.innerHTML = DATA.sections.map(s => {
+    const mods = s.modules.filter(m => m.pret);
+    if (!mods.length) return "";
+    return '<div class="sec">' + s.num + " · " + ech(s.titre) + "</div>" +
+      mods.map(m => {
+        const e = etatDe(m.code), idx = MODULES.findIndex(x => x.code === m.code);
+        const cls = ["mod"];
+        if (e.etat === "reussi") cls.push("fait");
+        else if (e.etat === "en-cours") cls.push("encours");
+        if (idx > f) cls.push("bloque");
+        if (courant === m.code) cls.push("actif");
+        const p = e.etat === "reussi" ? "●" : (idx > f ? "🔒" : (e.etat === "en-cours" ? "◐" : "○"));
+        return '<div class="'+cls.join(" ")+'" data-code="'+m.code+'">'+
+          '<span class="pastille">'+p+'</span>'+
+          '<span class="code">'+m.code+'</span>'+
+          '<span class="nom">'+ech(m.titre)+"</span></div>";
+      }).join("");
+  }).join("");
+  const faits = MODULES.filter(m => estFait(m.code)).length;
+  const pc = Math.round(faits / MODULES.length * 100);
+  document.getElementById("jauge").style.width = pc + "%";
+  document.getElementById("jauge-txt").textContent = faits + " / " + MODULES.length + " modules";
+  document.getElementById("jauge-pc").textContent = pc + " %";
+}
+
+function dessiner() {
+  dessinerLat();
+  const ent = document.getElementById("entete"), vue = document.getElementById("vue");
+  if (!courant) { ent.innerHTML = ""; vue.innerHTML = accueil(); brancherAccueil(); return; }
+  const m = parCode[courant], e = etatDe(courant);
+  const ongs = [["lecon","Leçon"]];
+  if (m.dossier) ongs.push(["exo","Exercice"]);
+  if (m.dossier && e.etat === "reussi") ongs.push(["sol","Solution de référence"]);
+  if (!ongs.some(o => o[0] === onglet)) onglet = ongs[0][0];
+  ent.innerHTML =
+    '<div class="ligne"><h2>'+ech(m.titre)+"</h2>"+
+    '<span class="meta">'+m.code+" · "+m.min+" min</span>"+
+    (e.etat === "reussi" ? '<span class="badge ok">réussi</span>' :
+     e.etat === "en-cours" ? '<span class="badge">'+e.essais+" tentative"+(e.essais>1?"s":"")+"</span>" : "")+
+    "</div><div class=\"onglets\">"+
+    ongs.map(o => '<button class="onglet'+(onglet===o[0]?" actif":"")+'" data-ong="'+o[0]+'">'+o[1]+"</button>").join("")+
+    "</div>";
+  ent.querySelectorAll("[data-ong]").forEach(b =>
+    b.onclick = () => { onglet = b.dataset.ong; dessiner(); });
+
+  if (onglet === "lecon") vue.innerHTML = '<div class="doc">'+md(m.lecon)+ (m.dossier ? "" : boutonManuel(m,e)) +"</div>";
+  else if (onglet === "sol") vue.innerHTML = '<div class="doc"><h1>Solution de référence</h1>'+
+    "<p>Compare-la à la tienne. Les différences de style comptent autant que le résultat.</p>"+
+    "<pre><code>"+surligner(m.solution||"")+"</code></pre></div>";
+  else dessinerExo(m);
+
+  if (onglet === "lecon" && !m.dossier) {
+    const b = vue.querySelector("#b-manuel");
+    if (b) b.onclick = () => { validerManuellement(m.code); suivant(); };
+  }
+}
+function boutonManuel(m,e) {
+  if (e.etat === "reussi") return '<div class="reussite"><b>✓</b><p>Module validé. '+
+    '<button class="btn sec" id="b-manuel">Revalider</button></p></div>';
+  return '<hr><p>Ce module n\'a pas de tests automatiques : il se valide à la main quand tu l\'as fait.</p>'+
+    '<p><button class="btn" id="b-manuel">J\'ai terminé ce module</button></p>';
+}
+
+function dessinerExo(m) {
+  const vue = document.getElementById("vue");
+  vue.innerHTML =
+    '<div class="split"><div class="gauche"><div class="doc">'+md(m.enonce)+"</div></div>"+
+    '<div class="droite">'+
+      '<div class="barre"><span class="fic">exercices/'+m.dossier+"/exercice.mjs</span>"+
+        '<button class="btn sec" id="b-reset">Repartir de zéro</button>'+
+        '<button class="btn" id="b-run">▶ Lancer les tests <kbd>Ctrl+↵</kbd></button></div>'+
+      '<div class="ed" id="ed"><div class="cadre">'+
+        '<div class="gout" id="gout"></div>'+
+        '<div class="zone"><pre><code id="hl"></code></pre>'+
+        '<textarea id="ta" spellcheck="false" autocapitalize="off" autocorrect="off"></textarea></div>'+
+      "</div></div>"+
+      '<div class="res" id="res"><div class="vide">Écris ton code, puis lance les tests.</div></div>'+
+    "</div></div>";
+  editeur = monterEditeur(etat.code[m.code] ?? m.depart, () => {
+    etat.code[m.code] = editeur.valeur();
+    try { localStorage.setItem(CLE, JSON.stringify(etat)); } catch (e) {}
+  });
+  document.getElementById("b-run").onclick = executer;
+  document.getElementById("b-reset").onclick = () => {
+    if (!confirm("Remplacer ton code par le fichier de départ ?")) return;
+    editeur.definir(m.depart); etat.code[m.code] = m.depart; sauver(); syncCode(m.code);
+  };
+  if (dernierRes && dernierRes.code === m.code) afficherRes(dernierRes.data);
+}
+
+function monterEditeur(valeur, onchange) {
+  const ta = document.getElementById("ta"), hl = document.getElementById("hl"),
+        gout = document.getElementById("gout"), ed = document.getElementById("ed");
+  let t = null;
+  function peindre() {
+    const v = ta.value;
+    hl.innerHTML = surligner(v) + "\n";
+    const n = v.split("\n").length;
+    gout.innerHTML = Array.from({length:n}, (_,i) => i+1).join("<br>");
+    ta.style.height = "auto";
+    const h = Math.max(hl.parentElement.scrollHeight, ed.clientHeight - 1, 200);
+    ta.style.height = h + "px";
+    hl.parentElement.style.height = h + "px";
+  }
+  ta.value = valeur;
+  peindre();
+  ta.addEventListener("input", () => { peindre(); clearTimeout(t); t = setTimeout(onchange, 350); });
+  ta.addEventListener("keydown", ev => {
+    if (ev.key === "Tab") {
+      ev.preventDefault();
+      const s = ta.selectionStart, e = ta.selectionEnd, v = ta.value;
+      if (s !== e && v.slice(s,e).includes("\n")) {
+        const d = v.lastIndexOf("\n", s-1)+1;
+        const bloc = v.slice(d,e);
+        const neuf = ev.shiftKey ? bloc.replace(/^ {1,2}/gm,"") : bloc.replace(/^/gm,"  ");
+        ta.value = v.slice(0,d) + neuf + v.slice(e);
+        ta.selectionStart = d; ta.selectionEnd = d + neuf.length;
+      } else {
+        ta.value = v.slice(0,s) + "  " + v.slice(e);
+        ta.selectionStart = ta.selectionEnd = s + 2;
+      }
+      peindre(); clearTimeout(t); t = setTimeout(onchange, 350); return;
+    }
+    if (ev.key === "Enter") {
+      const s = ta.selectionStart, v = ta.value;
+      const d = v.lastIndexOf("\n", s-1)+1;
+      const ind = (v.slice(d,s).match(/^[ \t]*/)||[""])[0];
+      const sup = /[{[(]\s*$/.test(v.slice(d,s)) ? "  " : "";
+      ev.preventDefault();
+      const ins = "\n" + ind + sup;
+      ta.value = v.slice(0,s) + ins + v.slice(ta.selectionEnd);
+      ta.selectionStart = ta.selectionEnd = s + ins.length;
+      peindre(); clearTimeout(t); t = setTimeout(onchange, 350); return;
+    }
+    if ((ev.ctrlKey || ev.metaKey) && ev.key === "Enter") { ev.preventDefault(); executer(); }
+  });
+  window.addEventListener("resize", peindre);
+  return { valeur: () => ta.value, definir: v => { ta.value = v; peindre(); }, focus: () => ta.focus() };
+}
+
+async function executer() {
+  const m = parCode[courant];
+  const b = document.getElementById("b-run");
+  const res = document.getElementById("res");
+  b.disabled = true; b.textContent = "…";
+  res.innerHTML = '<div class="vide">Exécution…</div>';
+  etat.code[m.code] = editeur.valeur();
+  await new Promise(r => setTimeout(r, 20));
+  let data;
+  try { data = await lancerTests(m, editeur.valeur()); }
+  catch (e) { data = { fatale:"Erreur inattendue : " + e.message, sortie:[] }; }
+  b.disabled = false; b.innerHTML = "▶ Lancer les tests <kbd>Ctrl+↵</kbd>";
+  const reussi = !!(data.r && data.r.echecs.length === 0 && data.r.total > 0);
+  enregistrer(m.code, reussi ? "reussi" : "echec",
+    { total: data.r ? data.r.total : 0, reussis: data.r ? data.r.reussis : 0 });
+  syncCode(m.code);
+  dernierRes = { code:m.code, data };
+  afficherRes(data);
+  dessinerLat();
+  if (reussi) {
+    const e2 = document.getElementById("entete");
+    if (e2 && !e2.querySelector(".badge.ok")) dessiner(), afficherRes(data);
+  }
+}
+
+function afficherRes(data) {
+  const res = document.getElementById("res");
+  if (!res) return;
+  const m = parCode[courant];
+  let h = "";
+  if (data.fatale) {
+    h = '<div class="res-bar"><span class="pt ko">Le code n\'a pas pu s\'exécuter</span></div>'+
+        '<div class="detail">'+ech(data.fatale)+"</div>";
+  } else {
+    const r = data.r, ok = r.echecs.length === 0;
+    h = '<div class="res-bar"><span class="pt '+(ok?"ok":"ko")+'">'+
+        r.reussis+" / "+r.total+" tests"+(ok?" ✓":"")+"</span>"+
+        (ok ? "" : '<span style="color:var(--muet);font-size:12px">'+r.echecs.length+" à corriger</span>")+
+        "</div>";
+    if (ok) {
+      const suiv = MODULES[MODULES.findIndex(x => x.code === m.code)+1];
+      h += '<div class="reussite"><b>✓</b><p>Module <b>'+m.code+"</b> validé. "+
+        "Regarde la solution de référence et compare-la à ton code.</p>"+
+        (suiv ? '<button class="btn ok" id="b-suivant">Module suivant : '+suiv.code+"</button>" : "")+
+        "</div>";
+    }
+    let grp = null;
+    for (const c of r.cas) {
+      if (c.groupe !== grp) { grp = c.groupe; if (grp) h += '<div class="res-grp">'+ech(grp)+"</div>"; }
+      h += '<div class="res-cas '+(c.ok?"v":"x")+'"><span class="ic">'+(c.ok?"✓":"✕")+
+           "</span><span>"+ech(c.titre)+"</span></div>";
+      if (!c.ok && c.erreur) {
+        const e = c.erreur;
+        let d = ech(e.message || String(e));
+        if (/BOUCLE_TROP_LONGUE/.test(d)) d = "Boucle qui ne s'arrête jamais : dans cette fonction, la condition "+
+          "de ta boucle ne devient jamais fausse. Vérifie que la variable testée change bien à chaque tour.";
+        if (e.aDetail) d += '\n<span class="lbl">attendu :</span> <span class="att">'+ech(String(e.attendu))+
+          '</span>\n<span class="lbl">obtenu  :</span> <span class="obt">'+ech(String(e.obtenu))+"</span>";
+        else if (e.name && e.name !== "EchecAssertion") d = ech(e.name) + " : " + d;
+        h += '<div class="detail">'+d+"</div>";
+      }
+    }
+  }
+  if (data.sortie && data.sortie.length)
+    h += '<pre class="sortie"><span class="t">Sortie console</span>'+ech(data.sortie.join("\n"))+"</pre>";
+  res.innerHTML = h;
+  const bs = document.getElementById("b-suivant");
+  if (bs) bs.onclick = suivant;
+}
+
+function suivant() {
+  const i = MODULES.findIndex(x => x.code === courant);
+  const s = MODULES[i+1];
+  if (s) ouvrir(s.code); else { courant = null; dessiner(); }
+}
+function ouvrir(code) {
+  if (!estOuvert(code)) return;
+  courant = code; onglet = estFait(code) && parCode[code].dossier ? "exo" : "lecon";
+  if (!estFait(code)) onglet = "lecon";
+  dessiner();
+  location.hash = code;
+}
+
+/* accueil */
+function accueil() {
+  const faits = MODULES.filter(m => estFait(m.code)).length;
+  const prochain = MODULES[frontiere()];
+  const essais = Object.values(etat.modules).reduce((a,m) => a + (m.essais||0), 0);
+  const min = MODULES.filter(m => estFait(m.code)).reduce((a,m) => a + m.min, 0);
+  return '<div class="accueil"><h2>Bienvenue, Black</h2>'+
+    '<p class="sous">Sections 01 et 02 · '+MODULES.length+' modules · 191 tests. Les sections 03 à 09 arrivent quand tu approches de la fin.</p>'+
+    '<div class="cartes">'+
+      '<div class="carte"><div class="gros">'+faits+" / "+MODULES.length+'</div><h3>Modules réussis</h3>'+
+        "<p>"+Math.round(min/60*10)/10+" h de contenu validé</p></div>"+
+      '<div class="carte"><div class="gros">'+essais+'</div><h3>Tentatives</h3>'+
+        "<p>Les échecs comptent : c'est eux qui montrent où tu bloques</p></div>"+
+      '<div class="carte"><h3>Prochain module</h3><p><b style="color:var(--accent)">'+prochain.code+" · "+ech(prochain.titre)+
+        "</b><br>"+prochain.min+" min</p><p style=\"margin-top:10px\"><button class=\"btn\" id=\"b-go\">Commencer</button></p></div>"+
+    "</div>"+
+    '<div class="carte" style="margin-top:22px;max-width:920px"><h3>Le cycle, en 4 temps</h3>'+
+      "<p>1. Lis la leçon &nbsp;·&nbsp; 2. Code dans l'éditeur &nbsp;·&nbsp; 3. <kbd>Ctrl</kbd>+<kbd>Entrée</kbd> pour lancer les tests "+
+      "&nbsp;·&nbsp; 4. Corrige jusqu'au vert.<br>Les modules se débloquent dans l'ordre. Rien à installer, rien à taper dans un terminal.</p></div>"+
+    "</div>";
+}
+function brancherAccueil() {
+  const b = document.getElementById("b-go");
+  if (b) b.onclick = () => ouvrir(MODULES[frontiere()].code);
+}
+
+/* modale */
+function modale(titre, html) {
+  document.getElementById("modale").innerHTML = "<h3>"+ech(titre)+'</h3><div class="doc">'+html+"</div>"+
+    '<div class="fin"><button class="btn" id="b-fermer">Fermer</button></div>';
+  document.getElementById("fond").classList.add("on");
+  document.getElementById("b-fermer").onclick = () => document.getElementById("fond").classList.remove("on");
+}
+document.getElementById("fond").onclick = ev => {
+  if (ev.target.id === "fond") ev.currentTarget.classList.remove("on");
+};
+
+/* =========================================================
+   6. BRANCHEMENTS
+   ========================================================= */
+document.getElementById("liste").onclick = ev => {
+  const d = ev.target.closest(".mod");
+  if (!d) return;
+  if (d.classList.contains("bloque")) {
+    modale("Module verrouillé", "<p>L'ordre est strict : chaque module suppose le précédent acquis. "+
+      "Termine <b>"+MODULES[frontiere()].code+"</b> pour débloquer celui-ci.</p>");
+    return;
+  }
+  ouvrir(d.dataset.code);
+};
+document.getElementById("b-connecter").onclick = connecter;
+document.getElementById("b-export").onclick = () => {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([progressionJson()], { type:"application/json" }));
+  a.download = "progression.json"; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+};
+document.getElementById("b-aide").onclick = () => modale("Comment ça marche", md(
+"## Le cycle\n\n"+
+"1. Clique un module à gauche, lis la **Leçon**.\n"+
+"2. Onglet **Exercice** : l'énoncé est à gauche, tu codes à droite.\n"+
+"3. `Ctrl+Entrée` lance les tests. Le rouge te dit ce qui ne va pas, avec l'attendu et l'obtenu.\n"+
+"4. Corrige jusqu'au vert. La solution de référence se débloque à ce moment-là.\n\n"+
+"## Les règles\n\n"+
+"- L'ordre est strict : un module se débloque quand le précédent est vert.\n"+
+"- Un module dont les tests ne passent pas n'est pas fait.\n"+
+"- Bloqué plus de 30 minutes ? Ouvre-moi une session : indice, pas réponse.\n"+
+"- Ne passe pas à React avant la fin de la section 09.\n\n"+
+"## Ton code est-il sauvegardé ?\n\n"+
+"Oui, dans ce navigateur, à chaque frappe. Ne vide pas les données du site.\n\n"+
+"**Pour que le bilan hebdomadaire lise ton vrai code**, clique **Connecter le dossier Javascript** et choisis le dossier "+
+"`Desktop/Javascript`. L'app écrit alors directement dans `exercices/*/exercice.mjs` et `progression.json` — "+
+"exactement les mêmes fichiers que la commande `js`. Les deux modes restent compatibles.\n\n"+
+"## Raccourcis\n\n"+
+"| Touche | Effet |\n|---|---|\n| `Ctrl+Entrée` | Lancer les tests |\n| `Tab` | Indenter |\n| `Shift+Tab` | Désindenter |\n"));
+
+window.addEventListener("keydown", ev => {
+  if ((ev.ctrlKey || ev.metaKey) && ev.key === "Enter" && courant && onglet === "exo") {
+    ev.preventDefault(); executer();
+  }
+  if (ev.key === "Escape") document.getElementById("fond").classList.remove("on");
+});
+window.addEventListener("beforeunload", () => {
+  if (courant && editeur) { etat.code[courant] = editeur.valeur();
+    try { localStorage.setItem(CLE, JSON.stringify(etat)); } catch (e) {} }
+});
+
+const h = location.hash.replace("#","");
+if (h && parCode[h] && estOuvert(h)) ouvrir(h); else dessiner();
+majSync();
+</script>
+</body>
+</html>

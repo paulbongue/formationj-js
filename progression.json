@@ -1,0 +1,91 @@
+{
+  "version": 1,
+  "creeLe": "2026-07-26T00:00:00.000Z",
+  "modules": {
+    "01-01": {
+      "etat": "reussi",
+      "essais": 0,
+      "echecs": 0,
+      "reussiLe": "2026-09-14T15:58:16.531Z",
+      "valideALaMain": true
+    },
+    "01-02": {
+      "etat": "reussi",
+      "essais": 9,
+      "echecs": 8,
+      "premierEssai": "2026-09-18T17:27:08.338Z",
+      "reussiLe": "2026-09-18T17:40:19.777Z",
+      "dernierEssai": "2026-09-18T17:40:19.776Z",
+      "essaisJusquAuSucces": 9
+    }
+  },
+  "journal": [
+    {
+      "date": "2026-09-14T15:58:16.532Z",
+      "code": "01-01",
+      "action": "valide-main"
+    },
+    {
+      "date": "2026-09-18T17:27:08.339Z",
+      "code": "01-02",
+      "action": "echec",
+      "tests": 7,
+      "reussis": 1
+    },
+    {
+      "date": "2026-09-18T17:27:27.043Z",
+      "code": "01-02",
+      "action": "echec",
+      "tests": 7,
+      "reussis": 1
+    },
+    {
+      "date": "2026-09-18T17:33:01.009Z",
+      "code": "01-02",
+      "action": "echec",
+      "tests": 7,
+      "reussis": 1
+    },
+    {
+      "date": "2026-09-18T17:38:32.771Z",
+      "code": "01-02",
+      "action": "echec",
+      "tests": 7,
+      "reussis": 5
+    },
+    {
+      "date": "2026-09-18T17:39:01.029Z",
+      "code": "01-02",
+      "action": "echec",
+      "tests": 7,
+      "reussis": 5
+    },
+    {
+      "date": "2026-09-18T17:39:30.731Z",
+      "code": "01-02",
+      "action": "echec",
+      "tests": 7,
+      "reussis": 5
+    },
+    {
+      "date": "2026-09-18T17:39:38.054Z",
+      "code": "01-02",
+      "action": "echec",
+      "tests": 7,
+      "reussis": 5
+    },
+    {
+      "date": "2026-09-18T17:40:06.798Z",
+      "code": "01-02",
+      "action": "echec",
+      "tests": 7,
+      "reussis": 5
+    },
+    {
+      "date": "2026-09-18T17:40:19.777Z",
+      "code": "01-02",
+      "action": "reussi",
+      "tests": 7
+    }
+  ]
+}
