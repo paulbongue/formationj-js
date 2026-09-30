@@ -17,6 +17,21 @@
       "reussiLe": "2026-09-18T17:40:19.777Z",
       "dernierEssai": "2026-09-18T17:40:19.776Z",
       "essaisJusquAuSucces": 9
+    },
+    "01-03": {
+      "etat": "reussi",
+      "essais": 0,
+      "echecs": 0,
+      "reussiLe": "2026-09-18T17:55:35.631Z",
+      "valideALaMain": true
+    },
+    "01-04": {
+      "etat": "en-cours",
+      "essais": 34,
+      "echecs": 34,
+      "premierEssai": "2026-09-18T18:06:37.475Z",
+      "reussiLe": null,
+      "dernierEssai": "2026-09-22T23:51:38.219Z"
     }
   },
   "journal": [
@@ -86,6 +101,172 @@
       "code": "01-02",
       "action": "reussi",
       "tests": 7
+    },
+    {
+      "date": "2026-09-18T17:55:35.631Z",
+      "code": "01-03",
+      "action": "valide-main"
+    },
+    {
+      "date": "2026-09-18T18:06:37.476Z",
+      "code": "01-04",
+      "action": "echec",
+      "tests": 11,
+      "reussis": 2
+    },
+    {
+      "date": "2026-09-18T18:08:50.450Z",
+      "code": "01-04",
+      "action": "echec",
+      "tests": 11,
+      "reussis": 4
+    },
+    {
+      "date": "2026-09-18T18:09:06.630Z",
+      "code": "01-04",
+      "action": "echec",
+      "tests": 11,
+      "reussis": 3
+    },
+    {
+      "date": "2026-09-18T18:10:05.179Z",
+      "code": "01-04",
+      "action": "echec",
+      "tests": 11,
+      "reussis": 3
+    },
+    {
+      "date": "2026-09-18T18:11:32.165Z",
+      "code": "01-04",
+      "action": "echec",
+      "tests": 11,
+      "reussis": 4
+    },
+    {
+      "date": "2026-09-18T18:14:56.076Z",
+      "code": "01-04",
+      "action": "echec",
+      "tests": 11,
+      "reussis": 3
+    },
+    {
+      "date": "2026-09-18T18:15:15.020Z",
+      "code": "01-04",
+      "action": "echec",
+      "tests": 11,
+      "reussis": 4
+    },
+    {
+      "date": "2026-09-18T18:15:36.757Z",
+      "code": "01-04",
+      "action": "echec",
+      "tests": 11,
+      "reussis": 3
+    },
+    {
+      "date": "2026-09-18T18:18:47.111Z",
+      "code": "01-04",
+      "action": "echec",
+      "type": "chargement",
+      "erreur": "SyntaxError: Identifier personne has already been declared"
+    },
+    {
+      "date": "2026-09-18T18:19:07.943Z",
+      "code": "01-04",
+      "action": "echec",
+      "tests": 11,
+      "reussis": 3
+    },
+    {
+      "date": "2026-09-18T18:22:30.982Z",
+      "code": "01-04",
+      "action": "echec",
+      "tests": 11,
+      "reussis": 3
+    },
+    {
+      "date": "2026-09-18T18:24:25.886Z",
+      "code": "01-04",
+      "action": "echec",
+      "tests": 11,
+      "reussis": 4
+    },
+    {
+      "date": "2026-09-18T18:25:04.753Z",
+      "code": "01-04",
+      "action": "echec",
+      "tests": 11,
+      "reussis": 4
+    },
+    {
+      "date": "2026-09-18T18:33:07.739Z",
+      "code": "01-04",
+      "action": "echec",
+      "tests": 11,
+      "reussis": 3
+    },
+    {
+      "date": "2026-09-18T18:33:36.275Z",
+      "code": "01-04",
+      "action": "echec",
+      "tests": 11,
+      "reussis": 3
+    },
+    {
+      "date": "2026-09-18T18:33:47.715Z",
+      "code": "01-04",
+      "action": "echec",
+      "tests": 11,
+      "reussis": 4
+    },
+    {
+      "date": "2026-09-18T18:50:40.721Z",
+      "code": "01-04",
+      "action": "echec",
+      "tests": 11,
+      "reussis": 4
+    },
+    {
+      "date": "2026-09-18T18:51:00.328Z",
+      "code": "01-04",
+      "action": "echec",
+      "tests": 11,
+      "reussis": 3
+    },
+    {
+      "date": "2026-09-18T18:52:31.148Z",
+      "code": "01-04",
+      "action": "echec",
+      "tests": 11,
+      "reussis": 4
+    },
+    {
+      "date": "2026-09-18T18:54:21.720Z",
+      "code": "01-04",
+      "action": "echec",
+      "tests": 11,
+      "reussis": 4
+    },
+    {
+      "date": "2026-09-18T18:54:46.456Z",
+      "code": "01-04",
+      "action": "echec",
+      "tests": 11,
+      "reussis": 4
+    },
+    {
+      "date": "2026-09-22T23:43:06.972Z",
+      "code": "01-04",
+      "action": "echec",
+      "tests": 11,
+      "reussis": 6
+    },
+    {
+      "date": "2026-09-22T23:51:38.222Z",
+      "code": "01-04",
+      "action": "echec",
+      "tests": 11,
+      "reussis": 8
     }
   ]
 }
