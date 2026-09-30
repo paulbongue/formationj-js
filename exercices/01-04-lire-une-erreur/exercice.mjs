@@ -7,7 +7,7 @@ export function aireRectangle(largeur, hauteur) {
 }
 
 export function longueurNom(personne) {
-  return personne.nom.length;
+  return personne?.nom?.length ?? 0;
 }
 
 export function crier(mot) {
@@ -15,6 +15,8 @@ export function crier(mot) {
 }
 
 export function moyenne(notes) {
+  if (notes.length === 0) return 0;
+
   let total = 0;
   for (let i = 0; i < notes.length; i++) {
     total += notes[i];
